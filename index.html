@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyEmbeds – Discord Webhook Builder</title>
+    <link rel="icon" type="image/png" href="https://files.catbox.moe/x9w3b6.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #1e1f22; font-family: 'Segoe UI', system-ui, sans-serif; color: #e1e4e8; padding: 16px; font-size: 13px; transition: background 0.2s, color 0.2s; }
+        
+        body.light-mode { background: #f5f5f5; color: #111214; }
+        body.light-mode .editor-panel { background: #ffffff; }
+        body.light-mode .preview-panel { background: #f0f0f0; border-color: #ccc; }
+        body.light-mode .preview-embed, body.light-mode .preview-simple-message { background: #ffffff; border-color: #ddd; }
+        body.light-mode .embed-tab, body.light-mode .social-btn { background: #e0e0e0; border-color: #ccc; color: #111; }
+        body.light-mode .embed-tab.active { background: #5865f2; color: white; }
+        body.light-mode .form-group input, body.light-mode .form-group textarea, 
+        body.light-mode .simple-msg-area textarea, body.light-mode .webhook-row input, 
+        body.light-mode .json-editor textarea { background: #fff; color: #111; border-color: #ccc; }
+        body.light-mode .status-msg { background: #e0e0e0; }
+        body.light-mode .mode-toggle { background: #e0e0e0; }
+        body.light-mode .add-embed-btn { background: #e0e0e0; color: #111; }
+        body.light-mode .fields-container { background: #f0f0f0; }
+        body.light-mode .field-item { background: #e8e8e8; }
+        body.light-mode h1 { background: linear-gradient(120deg, #5865f2, #4752c4); background-clip: text; -webkit-background-clip: text; color: transparent; }
+        body.light-mode .logo img { filter: invert(1); }
+        body.light-mode .webhook-info { background: #e8e8e8; }
+        body.light-mode .changelog-overlay .changelog { background: #fff; color: #111; }
+        
+        .app { max-width: 1400px; margin: 0 auto; }
+        .header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 6px; }
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .logo { width: 36px; height: 36px; background: #2b2d31; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        .logo img { width: 100%; height: 100%; object-fit: cover; }
+        h1 { font-size: 1.3rem; font-weight: 700; background: linear-gradient(120deg, #ffffff, #b5bac1); background-clip: text; -webkit-background-clip: text; color: transparent; }
+        .header-right { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+        .social-btn, .support-btn, .theme-btn, .changelog-btn { padding: 4px 10px; border-radius: 24px; text-decoration: none; font-weight: 500; font-size: 0.7rem; display: inline-flex; align-items: center; gap: 4px; transition: 0.2s; cursor: pointer; border: none; }
+        .social-btn { background: #2b2d31; border: 1px solid #3c3f45; color: white; }
+        .support-btn { background: #5865f2; color: white; }
+        .theme-btn { background: #4e5058; color: white; }
+        .changelog-btn { background: #23a559; color: white; }
+        .builder { display: flex; gap: 16px; flex-wrap: wrap; }
+        .editor-panel, .preview-panel { padding: 14px; border-radius: 12px; }
+        .editor-panel { flex: 1.2; min-width: 280px; background: #2b2d31; }
+        .preview-panel { flex: 1; min-width: 280px; background: #1e1f22; border: 1px solid #3c3f45; }
+        .panel-title { font-size: 1rem; margin-bottom: 12px; padding-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: space-between; border-bottom: 1px solid #3c3f45; }
+        .mode-toggle { display: flex; gap: 4px; background: #1e1f22; padding: 2px; border-radius: 24px; }
+        .mode-btn { padding: 4px 12px; font-size: 0.7rem; border-radius: 20px; background: none; border: none; cursor: pointer; color: #b5bac1; }
+        .mode-btn.active { background: #5865f2; color: white; }
+        
+        .webhook-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+        .webhook-row input { flex: 2; background: #111214; border: 1px solid #3c3f45; padding: 8px 12px; border-radius: 10px; color: white; font-size: 0.8rem; }
+        .webhook-row button { background: #5865f2; border: none; padding: 0 14px; border-radius: 10px; font-weight: 600; cursor: pointer; color: white; font-size: 0.75rem; }
+        .load-webhook-btn { background: #4e5058 !important; }
+        .load-webhook-btn:hover { background: #5865f2 !important; }
+        
+        .webhook-info { background: #2b2d31; border-radius: 10px; padding: 8px 12px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; border-left: 3px solid #5865f2; }
+        .webhook-avatar { width: 32px; height: 32px; border-radius: 50%; background: #1e1f22; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .webhook-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .webhook-avatar i { font-size: 1.2rem; color: #5865f2; }
+        .webhook-name { font-weight: 600; font-size: 0.8rem; flex: 1; }
+        .webhook-name i { color: #5865f2; margin-right: 5px; }
+        .reload-webhook { background: none; border: none; color: #b5bac1; cursor: pointer; font-size: 0.7rem; padding: 4px 8px; border-radius: 16px; }
+        .reload-webhook:hover { background: #4e5058; color: white; }
+        
+        .simple-msg-area { margin-bottom: 16px; position: relative; }
+        .simple-msg-area label { font-size: 0.7rem; margin-bottom: 4px; display: block; }
+        .simple-msg-area textarea { font-size: 0.75rem; padding: 8px; border-radius: 10px; background: #111214; border: 1px solid #3c3f45; color: white; width: 100%; resize: vertical; font-family: inherit; }
+        
+        .embed-toolbar { display: flex; justify-content: space-between; align-items: center; margin: 10px 0 8px; }
+        .embed-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+        .embed-tab { background: #1e1f22; padding: 4px 12px; border-radius: 24px; cursor: pointer; font-size: 0.7rem; border: 1px solid #3c3f45; display: inline-flex; align-items: center; gap: 6px; }
+        .embed-tab.active { background: #5865f2; }
+        .delete-embed { background: none; border: none; color: #f23f42; margin-left: 6px; cursor: pointer; font-size: 0.7rem; }
+        .duplicate-embed { background: none; border: none; color: #23a559; cursor: pointer; font-size: 0.7rem; }
+        .add-embed-btn { background: #2b2d31; border: 1px dashed #5865f2; border-radius: 24px; padding: 4px 12px; font-size: 0.7rem; cursor: pointer; color: #b5bac1; }
+        .form-group { margin-bottom: 12px; position: relative; }
+        label { font-size: 0.7rem; margin-bottom: 4px; display: block; }
+        input, textarea, .color-row { width: 100%; background: #111214; border: 1px solid #3c3f45; border-radius: 8px; padding: 6px 8px; color: white; font-size: 0.75rem; }
+        .color-row { display: flex; align-items: center; gap: 8px; padding: 4px 8px; }
+        .color-row input[type="color"] { width: 36px; height: 28px; padding: 0; }
+        .fields-container { background: #1e1f22; border-radius: 10px; padding: 8px; margin-top: 6px; }
+        .field-item { background: #2b2d31; border-radius: 8px; padding: 8px; margin-bottom: 8px; }
+        .remove-field { background: #f23f42; border: none; color: white; padding: 3px 8px; border-radius: 16px; cursor: pointer; font-size: 0.65rem; margin-top: 4px; }
+        .add-field-btn { background: #2b2d31; border: 1px solid #5865f2; border-radius: 20px; padding: 4px 10px; font-size: 0.7rem; cursor: pointer; margin-top: 6px; }
+        .json-editor { display: none; }
+        .json-editor textarea { width: 100%; min-height: 300px; font-family: monospace; font-size: 0.7rem; padding: 8px; background: #111214; border: 1px solid #3c3f45; border-radius: 8px; color: white; }
+        .json-actions { margin-top: 8px; display: flex; gap: 8px; }
+        .json-actions button { background: #4e5058; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; color: white; font-size: 0.7rem; }
+        .visual-editor { display: block; }
+        
+        .preview-simple-message { background: #2b2d31; border-radius: 10px; padding: 10px; margin-bottom: 12px; font-size: 0.8rem; white-space: pre-wrap; }
+        .preview-embed { background: #2b2d31; border-radius: 10px; margin-bottom: 12px; border-left: 2px solid #5865f2; padding: 10px; }
+        .embed-author { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 0.75rem; }
+        .embed-author img { width: 18px; height: 18px; border-radius: 50%; }
+        .embed-title { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+        .embed-desc { font-size: 0.75rem; margin: 6px 0; color: #dbdee1; white-space: pre-wrap; }
+        .embed-fields { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; }
+        .field { flex: 1; min-width: 140px; background: #1e1f22; padding: 6px; border-radius: 6px; }
+        .field-name { font-weight: 600; font-size: 0.7rem; }
+        .field-value { font-size: 0.7rem; color: #b5bac1; white-space: pre-wrap; }
+        .embed-footer { font-size: 0.65rem; margin-top: 8px; border-top: 1px solid #3c3f45; padding-top: 6px; display: flex; justify-content: space-between; }
+        .embed-img img, .embed-thumb img { max-width: 100%; border-radius: 8px; max-height: 150px; margin-top: 6px; }
+        .status-msg { margin-top: 12px; padding: 8px; border-radius: 8px; background: #111214; font-size: 0.7rem; }
+        button:active { transform: scale(0.98); }
+        
+        .emoji-picker { display: none; position: absolute; background: #2b2d31; border: 1px solid #3c3f45; border-radius: 12px; padding: 8px; width: 260px; max-height: 180px; overflow-y: auto; z-index: 100; flex-wrap: wrap; gap: 4px; }
+        body.light-mode .emoji-picker { background: #fff; border-color: #ccc; }
+        .emoji-picker span { cursor: pointer; font-size: 1.2rem; padding: 4px; border-radius: 6px; display: inline-block; }
+        .emoji-picker span:hover { background: #5865f2; }
+        .emoji-btn { background: none; border: none; cursor: pointer; color: #b5bac1; font-size: 0.8rem; margin-left: 4px; }
+        body.light-mode .emoji-btn { color: #5865f2; }
+        .label-with-emoji { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+        
+        .changelog-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
+        .changelog { background: #1e1f22; border-radius: 16px; padding: 20px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; border-left: 4px solid #5865f2; }
+        .changelog h2 { margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .changelog ul { margin-left: 20px; margin-bottom: 16px; }
+        .changelog li { margin: 8px 0; font-size: 0.8rem; }
+        .close-changelog { background: #5865f2; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; color: white; font-size: 0.75rem; margin-top: 8px; }
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="header">
+        <div class="header-left">
+            <div class="logo"><img src="https://files.catbox.moe/x9w3b6.png" alt="EasyEmbeds Logo"></div>
+            <h1><i class="fab fa-discord"></i> EasyEmbeds</h1>
+        </div>
+        <div class="header-right">
+            <button id="changelogBtn" class="changelog-btn"><i class="fas fa-gift"></i> What's New</button>
+            <button id="themeToggleBtn" class="theme-btn"><i class="fas fa-moon"></i> Theme</button>
+            <a href="https://www.youtube.com/@easyembeds" target="_blank" class="social-btn"><i class="fab fa-youtube"></i> YouTube</a>
+            <a href="https://x.com/EasyEmbeds" target="_blank" class="social-btn"><i class="fab fa-x-twitter"></i> X</a>
+            <a href="https://discord.gg/pt2fHbMckc" target="_blank" class="support-btn"><i class="fas fa-headset"></i> Support</a>
+        </div>
+    </div>
+    <div class="sub">Discord webhook builder – Webhook preview, duplicate embeds, JSON editor, emoji picker, dark/light theme.</div>
+
+    <div class="builder">
+        <div class="editor-panel">
+            <div class="webhook-row">
+                <input type="text" id="webhookUrl" placeholder="Paste Discord webhook URL...">
+                <button id="loadWebhookBtn" class="load-webhook-btn"><i class="fas fa-sync-alt"></i> Load</button>
+                <button id="sendBtn"><i class="fas fa-paper-plane"></i> Send</button>
+            </div>
+            
+            <div id="webhookInfoContainer"></div>
+            
+            <div class="simple-msg-area">
+                <div class="label-with-emoji"><label>Simple Message (optional)</label><button class="emoji-btn" id="emojiBtnMsg"><i class="fas fa-smile"></i></button></div>
+                <textarea id="simpleMessage" rows="2" placeholder="Plain text..."></textarea>
+                <div id="emojiPickerMsg" class="emoji-picker"></div>
+            </div>
+            <div class="panel-title">
+                <span>Embeds</span>
+                <div class="mode-toggle">
+                    <button id="visualModeBtn" class="mode-btn active">Visual</button>
+                    <button id="jsonModeBtn" class="mode-btn">JSON</button>
+                </div>
+            </div>
+            <div id="visualEditor" class="visual-editor">
+                <div class="embed-toolbar">
+                    <div class="embed-list" id="embedList"></div>
+                    <button class="add-embed-btn" id="addEmbedBtn">+ Add embed</button>
+                </div>
+                <div id="currentEditor"></div>
+            </div>
+            <div id="jsonEditor" class="json-editor">
+                <textarea id="jsonPayload"></textarea>
+                <div class="json-actions">
+                    <button id="applyJsonBtn">Apply & Sync</button>
+                    <button id="formatJsonBtn">Format</button>
+                </div>
+                <div class="status-msg" style="margin-top: 8px;" id="jsonStatus">Edit JSON, then click Apply.</div>
+            </div>
+        </div>
+        <div class="preview-panel">
+            <div class="panel-title">Live preview</div>
+            <div id="previewContainer"></div>
+            <div class="status-msg" id="statusMsg">Ready. Paste webhook URL → click Load → build → Send.</div>
+        </div>
+    </div>
+</div>
+
+<!-- Changelog Modal -->
+<div id="changelogModal" class="changelog-overlay">
+    <div class="changelog">
+        <h2><i class="fas fa-gift"></i> What's New</h2>
+        <ul>
+            <li><strong>🖼️ Webhook Name & Avatar</strong> – Shows in live preview after clicking Load.</li>
+            <li><strong>✨ Duplicate Embed</strong> – Clone any embed with one click.</li>
+            <li><strong>😀 Emoji Picker</strong> – Click smiley icon to insert emojis.</li>
+            <li><strong>🌓 Dark/Light Theme</strong> – Toggle between themes.</li>
+            <li><strong>📝 JSON Editor</strong> – Switch between Visual and JSON mode.</li>
+            <li><strong>🎨 Color Picker</strong> – Choose any color for embed border.</li>
+            <li><strong>📎 Multiple Embeds</strong> – Add, duplicate, delete embeds.</li>
+        </ul>
+        <button id="closeChangelog" class="close-changelog">Got it!</button>
+    </div>
+</div>
+
+<script>
+    // Changelog
+    let changelogShown = sessionStorage.getItem('easyembeds_changelog_v4');
+    if (!changelogShown) {
+        document.getElementById('changelogModal').style.display = 'flex';
+        sessionStorage.setItem('easyembeds_changelog_v4', 'true');
+    }
+    document.getElementById('changelogBtn')?.addEventListener('click', () => {
+        document.getElementById('changelogModal').style.display = 'flex';
+    });
+    document.getElementById('closeChangelog')?.addEventListener('click', () => {
+        document.getElementById('changelogModal').style.display = 'none';
+    });
+    window.addEventListener('click', (e) => {
+        if (e.target === document.getElementById('changelogModal')) {
+            document.getElementById('changelogModal').style.display = 'none';
+        }
+    });
+
+    function escapeHtml(str) { return String(str ?? '').replace(/[&<>]/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;' }[m])); }
+    function intToHex(c) { return '#' + (c & 0xFFFFFF).toString(16).padStart(6,'0'); }
+
+    // Webhook Info
+    let currentWebhookInfo = null;
+    
+    async function fetchWebhookInfo(url) {
+        if (!url || !url.startsWith('https://discord.com/api/webhooks/')) {
+            currentWebhookInfo = null;
+            updateWebhookInfoDisplay();
+            showStatus("❌ Invalid webhook URL", false);
+            return;
+        }
+        showStatus("🔄 Fetching webhook info...", false);
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            let avatarUrl = null;
+            if (data.avatar) {
+                avatarUrl = `https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.png?size=40`;
+            }
+            currentWebhookInfo = {
+                name: data.name || "Unnamed Webhook",
+                avatar_url: avatarUrl,
+                id: data.id
+            };
+            updateWebhookInfoDisplay();
+            showStatus(`✅ Loaded: ${currentWebhookInfo.name}`, true);
+        } catch (err) {
+            currentWebhookInfo = null;
+            updateWebhookInfoDisplay();
+            showStatus("❌ Failed to load webhook info", false);
+        }
+    }
+    
+    function updateWebhookInfoDisplay() {
+        const container = document.getElementById('webhookInfoContainer');
+        if (!container) return;
+        if (currentWebhookInfo && currentWebhookInfo.name) {
+            let avatarHtml = `<i class="fab fa-discord" style="font-size: 1.2rem;"></i>`;
+            if (currentWebhookInfo.avatar_url) {
+                avatarHtml = `<img src="${currentWebhookInfo.avatar_url}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png';">`;
+            }
+            container.innerHTML = `
+                <div class="webhook-info">
+                    <div class="webhook-avatar">${avatarHtml}</div>
+                    <div class="webhook-name"><i class="fas fa-paper-plane"></i> ${escapeHtml(currentWebhookInfo.name)}</div>
+                    <button id="reloadWebhookBtn" class="reload-webhook"><i class="fas fa-sync-alt"></i></button>
+                </div>
+            `;
+            document.getElementById('reloadWebhookBtn')?.addEventListener('click', () => {
+                fetchWebhookInfo(document.getElementById('webhookUrl').value.trim());
+            });
+        } else {
+            container.innerHTML = `<div class="webhook-info" style="opacity:0.6;"><div class="webhook-avatar"><i class="fab fa-discord"></i></div><div class="webhook-name">No webhook loaded — paste URL and click "Load"</div></div>`;
+        }
+    }
+
+    document.getElementById('loadWebhookBtn')?.addEventListener('click', () => {
+        fetchWebhookInfo(document.getElementById('webhookUrl').value.trim());
+    });
+
+    // Emoji picker
+    const emojis = ["😀","😃","😄","😁","😆","😅","😂","🤣","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","😣","😖","😫","😩","🥺","😢","😭","😤","😠","😡","🤬","🤯","😳","🥵","🥶","😱","😨","😰","😥","😓","🤗","🤔","🤭","🤫","🤥","😶","😐","😑","😬","🙄","😯","😦","😧","😮","😲","🥱","😴","🤤","😪","😵","🤐","🥴","🤢","🤮","🤧","😷","🤒","🤕","🤑","🤠","😈","👿","👹","👺","🤡","💩","👻","💀","☠️","👽","🤖","🎃","👍","👎","👌","✌️","🤞","🤟","🤘","👏","🙌","👐","🤲","🤝","🙏","❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❣️","💕","💞","💓","💗","💖","💘","💝","🎉","✨","⭐","🌟","🔥","💧","💦","☀️","🌙","⭐","🌈","⚡","❄️","🔥","💨","💢","💥","💫","💦","💤","⭐","🌟","💯","❗","❓","⁉️","‼️","🔴","🟠","🟡","🟢","🔵","🟣","⚫","⚪","🟤"];
+
+    function createEmojiPicker(containerId, targetInputId) {
+        const picker = document.getElementById(containerId);
+        const input = document.getElementById(targetInputId);
+        if (!picker || !input) return;
+        picker.innerHTML = '';
+        emojis.forEach(emoji => {
+            const span = document.createElement('span');
+            span.textContent = emoji;
+            span.onclick = (e) => {
+                e.stopPropagation();
+                const start = input.selectionStart;
+                const end = input.selectionEnd;
+                const text = input.value;
+                input.value = text.substring(0, start) + emoji + text.substring(end);
+                input.dispatchEvent(new Event('input'));
+                picker.style.display = 'none';
+                input.focus();
+            };
+            picker.appendChild(span);
+        });
+    }
+
+    // Global data
+    let embeds = [{
+        title: "Welcome To EasyEmbeds",
+        description: "Build beautiful Discord messages with multiple embeds. Edit fields on the left.",
+        color: 0x5865f2,
+        author: { name: "", icon_url: "", url: "" },
+        footer: { text: "", icon_url: "" },
+        timestamp: null,
+        thumbnail: { url: "" },
+        image: { url: "" },
+        fields: []
+    }];
+    let selectedEmbedIndex = 0;
+    let currentMode = "visual";
+
+    const visualEditorDiv = document.getElementById('visualEditor');
+    const jsonEditorDiv = document.getElementById('jsonEditor');
+    const jsonTextarea = document.getElementById('jsonPayload');
+    const simpleMessageInput = document.getElementById('simpleMessage');
+
+    // Theme toggle
+    let isDarkMode = true;
+    document.getElementById('themeToggleBtn')?.addEventListener('click', () => {
+        isDarkMode = !isDarkMode;
+        if (isDarkMode) {
+            document.body.classList.remove('light-mode');
+            document.getElementById('themeToggleBtn').innerHTML = '<i class="fas fa-moon"></i> Theme';
+        } else {
+            document.body.classList.add('light-mode');
+            document.getElementById('themeToggleBtn').innerHTML = '<i class="fas fa-sun"></i> Theme';
+        }
+    });
+
+    function rebuildEditorUI() {
+        const embed = embeds[selectedEmbedIndex];
+        if (!embed) return;
+        const editorDiv = document.getElementById('currentEditor');
+        if (!editorDiv) return;
+        editorDiv.innerHTML = `
+            <div class="form-group">
+                <div class="label-with-emoji"><label>Title</label><button class="emoji-btn" id="emojiBtnTitle"><i class="fas fa-smile"></i></button></div>
+                <input type="text" id="titleInput" value="${escapeHtml(embed.title)}">
+                <div id="emojiPickerTitle" class="emoji-picker"></div>
+            </div>
+            <div class="form-group">
+                <div class="label-with-emoji"><label>Description</label><button class="emoji-btn" id="emojiBtnDesc"><i class="fas fa-smile"></i></button></div>
+                <textarea id="descInput">${escapeHtml(embed.description)}</textarea>
+                <div id="emojiPickerDesc" class="emoji-picker"></div>
+            </div>
+            <div class="form-group"><label>Color</label><div class="color-row"><input type="color" id="colorPicker" value="${intToHex(embed.color)}"><span>${intToHex(embed.color)}</span></div></div>
+            <div class="form-group"><label>Author Name</label><input type="text" id="authorName" value="${escapeHtml(embed.author.name)}"></div>
+            <div class="form-group"><label>Author Icon URL</label><input type="text" id="authorIcon" value="${escapeHtml(embed.author.icon_url)}"></div>
+            <div class="form-group"><label>Author URL</label><input type="text" id="authorUrl" value="${escapeHtml(embed.author.url)}"></div>
+            <div class="form-group"><label>Thumbnail URL</label><input type="text" id="thumbUrl" value="${escapeHtml(embed.thumbnail.url)}"></div>
+            <div class="form-group"><label>Main Image URL</label><input type="text" id="imageUrl" value="${escapeHtml(embed.image.url)}"></div>
+            <div class="form-group"><label>Footer Text</label><input type="text" id="footerText" value="${escapeHtml(embed.footer.text)}"></div>
+            <div class="form-group"><label>Footer Icon URL</label><input type="text" id="footerIcon" value="${escapeHtml(embed.footer.icon_url)}"></div>
+            <div class="form-group"><label>Timestamp (ISO)</label><input type="text" id="timestampVal" value="${embed.timestamp || ''}"></div>
+            <div class="form-group"><label>Fields</label><div id="fieldsDynamicContainer" class="fields-container"></div><button type="button" id="addFieldBtn" class="add-field-btn">+ Add field</button></div>
+        `;
+
+        createEmojiPicker('emojiPickerTitle', 'titleInput');
+        createEmojiPicker('emojiPickerDesc', 'descInput');
+        document.getElementById('emojiBtnTitle')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const picker = document.getElementById('emojiPickerTitle');
+            picker.style.display = picker.style.display === 'flex' ? 'none' : 'flex';
+        });
+        document.getElementById('emojiBtnDesc')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const picker = document.getElementById('emojiPickerDesc');
+            picker.style.display = picker.style.display === 'flex' ? 'none' : 'flex';
+        });
+
+        document.getElementById('titleInput')?.addEventListener('input', (e) => { embed.title = e.target.value; updatePreviewAndJson(); });
+        document.getElementById('descInput')?.addEventListener('input', (e) => { embed.description = e.target.value; updatePreviewAndJson(); });
+        document.getElementById('colorPicker')?.addEventListener('input', (e) => { embed.color = parseInt(e.target.value.slice(1), 16); updatePreviewAndJson(); });
+        document.getElementById('authorName')?.addEventListener('input', (e) => { embed.author.name = e.target.value; updatePreviewAndJson(); });
+        document.getElementById('authorIcon')?.addEventListener('input', (e) => { embed.author.icon_url = e.target.value; updatePreviewAndJson(); });
+        document.getElementById('authorUrl')?.addEventListener('input', (e) => { embed.author.url = e.target.value; updatePreviewAndJson(); });
+        document.getElementById('thumbUrl')?.addEventListener('input', (e) => { embed.thumbnail.url = e.target.value; updatePreviewAndJson(); });
+        document.getElementById('imageUrl')?.addEventListener('input', (e) => { embed.image.url = e.target.value; updatePreviewAndJson(); });
+        document.getElementById('footerText')?.addEventListener('input', (e) => { embed.footer.text = e.target.value; updatePreviewAndJson(); });
+        document.getElementById('footerIcon')?.addEventListener('input', (e) => { embed.footer.icon_url = e.target.value; updatePreviewAndJson(); });
+        document.getElementById('timestampVal')?.addEventListener('input', (e) => { embed.timestamp = e.target.value || null; updatePreviewAndJson(); });
+
+        const fieldsContainer = document.getElementById('fieldsDynamicContainer');
+        function renderFields() {
+            if (!fieldsContainer) return;
+            fieldsContainer.innerHTML = '';
+            embed.fields.forEach((f, idx) => {
+                const div = document.createElement('div'); div.className = 'field-item';
+                div.innerHTML = `<input placeholder="Name" class="f-name" value="${escapeHtml(f.name)}"><textarea placeholder="Value" class="f-value">${escapeHtml(f.value)}</textarea><label><input type="checkbox" class="f-inline" ${f.inline ? 'checked' : ''}> Inline</label><button class="remove-field">Remove</button>`;
+                div.querySelector('.f-name').addEventListener('input', (e) => { embed.fields[idx].name = e.target.value; updatePreviewAndJson(); });
+                div.querySelector('.f-value').addEventListener('input', (e) => { embed.fields[idx].value = e.target.value; updatePreviewAndJson(); });
+                div.querySelector('.f-inline').addEventListener('change', (e) => { embed.fields[idx].inline = e.target.checked; updatePreviewAndJson(); });
+                div.querySelector('.remove-field').addEventListener('click', () => { embed.fields.splice(idx,1); renderFields(); updatePreviewAndJson(); });
+                fieldsContainer.appendChild(div);
+            });
+        }
+        renderFields();
+        document.getElementById('addFieldBtn')?.addEventListener('click', () => { embed.fields.push({ name: "New", value: "", inline: false }); renderFields(); updatePreviewAndJson(); });
+    }
+
+    function updatePreviewAndJson() {
+        updatePreview();
+        if (currentMode === "visual") updateJsonEditorFromVisual();
+    }
+
+    function updatePreview() {
+        const container = document.getElementById('previewContainer');
+        if (!container) return;
+        let html = '';
+        const simpleMsg = simpleMessageInput.value;
+        if (simpleMsg.trim() !== '') html += `<div class="preview-simple-message">${escapeHtml(simpleMsg)}</div>`;
+        for (const emb of embeds) {
+            const colorHex = intToHex(emb.color);
+            html += `<div class="preview-embed" style="border-left: 2px solid ${colorHex};"><div>
+                        ${emb.author?.name ? `<div class="embed-author">${emb.author.icon_url ? `<img src="${emb.author.icon_url}" onerror="this.style.display='none'">` : ''}<span>${escapeHtml(emb.author.name)}</span></div>` : ''}
+                        ${emb.title ? `<div class="embed-title">${escapeHtml(emb.title)}</div>` : ''}
+                        ${emb.description ? `<div class="embed-desc">${escapeHtml(emb.description)}</div>` : ''}
+                        ${emb.fields?.length ? `<div class="embed-fields">${emb.fields.map(f => `<div class="field" style="${f.inline ? 'flex:1' : 'width:100%'}"><div class="field-name">${escapeHtml(f.name)}</div><div class="field-value">${escapeHtml(f.value)}</div></div>`).join('')}</div>` : ''}
+                        ${emb.image?.url ? `<div class="embed-img"><img src="${emb.image.url}" onerror="this.style.display='none'"></div>` : ''}
+                        ${emb.thumbnail?.url ? `<div class="embed-thumb"><img src="${emb.thumbnail.url}" onerror="this.style.display='none'"></div>` : ''}
+                        ${(emb.footer?.text || emb.timestamp) ? `<div class="embed-footer">${emb.footer?.text ? `<span>${escapeHtml(emb.footer.text)}</span>` : ''}${emb.timestamp ? `<span>${new Date(emb.timestamp).toLocaleString()}</span>` : ''}</div>` : ''}
+                    </div></div>`;
+        }
+        if (!html) html = '<div style="color:#b5bac1;text-align:center;">No content to preview</div>';
+        container.innerHTML = html;
+    }
+
+    function getFullPayload() {
+        const content = simpleMessageInput.value.trim();
+        const payload = { embeds: embeds.map(e => {
+            const clean = JSON.parse(JSON.stringify(e));
+            if(clean.color) clean.color = Number(clean.color);
+            if(clean.timestamp === "") delete clean.timestamp;
+            if(clean.author && !clean.author.name) delete clean.author;
+            if(clean.footer && !clean.footer.text) delete clean.footer;
+            if(clean.thumbnail && !clean.thumbnail.url) delete clean.thumbnail;
+            if(clean.image && !clean.image.url) delete clean.image;
+            if(clean.fields && clean.fields.length===0) delete clean.fields;
+            return clean;
+        }) };
+        if(content) payload.content = content;
+        return payload;
+    }
+
+    function updateJsonEditorFromVisual() {
+        const payload = getFullPayload();
+        jsonTextarea.value = JSON.stringify(payload, null, 2);
+        document.getElementById('jsonStatus').innerHTML = '✅ JSON synced.';
+    }
+
+    function applyJsonToVisual() {
+        try {
+            const parsed = JSON.parse(jsonTextarea.value);
+            if (!parsed || typeof parsed !== 'object') throw new Error("Invalid object");
+            let newEmbeds = parsed.embeds;
+            if (!Array.isArray(newEmbeds)) newEmbeds = [];
+            newEmbeds = newEmbeds.map(emb => ({
+                title: emb.title || "",
+                description: emb.description || "",
+                color: typeof emb.color === 'number' ? emb.color : 0x5865f2,
+                author: { name: emb.author?.name || "", icon_url: emb.author?.icon_url || "", url: emb.author?.url || "" },
+                footer: { text: emb.footer?.text || "", icon_url: emb.footer?.icon_url || "" },
+                timestamp: emb.timestamp || null,
+                thumbnail: { url: emb.thumbnail?.url || "" },
+                image: { url: emb.image?.url || "" },
+                fields: Array.isArray(emb.fields) ? emb.fields.map(f => ({ name: f.name || "", value: f.value || "", inline: !!f.inline })) : []
+            }));
+            if (newEmbeds.length === 0) newEmbeds = [{ title: "New Embed", description: "", color: 0x5865f2, author: { name: "", icon_url: "", url: "" }, footer: { text: "", icon_url: "" }, timestamp: null, thumbnail: { url: "" }, image: { url: "" }, fields: [] }];
+            embeds = newEmbeds;
+            selectedEmbedIndex = 0;
+            if (parsed.content !== undefined) simpleMessageInput.value = parsed.content || "";
+            rebuildEditorUI();
+            updatePreview();
+            if (currentMode === "visual") updateJsonEditorFromVisual();
+            document.getElementById('jsonStatus').innerHTML = '✅ Applied JSON.';
+            showStatus("JSON applied", true);
+        } catch (e) {
+            document.getElementById('jsonStatus').innerHTML = `❌ Invalid JSON: ${e.message}`;
+            showStatus("JSON error", false);
+        }
+    }
+
+    function formatJson() {
+        try {
+            const parsed = JSON.parse(jsonTextarea.value);
+            jsonTextarea.value = JSON.stringify(parsed, null, 2);
+            document.getElementById('jsonStatus').innerHTML = '✅ Formatted.';
+        } catch (e) {
+            document.getElementById('jsonStatus').innerHTML = `❌ Cannot format: ${e.message}`;
+        }
+    }
+
+    function setMode(mode) {
+        currentMode = mode;
+        if (mode === "visual") {
+            visualEditorDiv.style.display = "block";
+            jsonEditorDiv.style.display = "none";
+            document.getElementById('visualModeBtn').classList.add('active');
+            document.getElementById('jsonModeBtn').classList.remove('active');
+            updateJsonEditorFromVisual();
+        } else {
+            visualEditorDiv.style.display = "none";
+            jsonEditorDiv.style.display = "block";
+            document.getElementById('visualModeBtn').classList.remove('active');
+            document.getElementById('jsonModeBtn').classList.add('active');
+            updateJsonEditorFromVisual();
+        }
+    }
+
+    function refreshEmbedListUI() {
+        const container = document.getElementById('embedList');
+        if(!container) return;
+        container.innerHTML = '';
+        embeds.forEach((_, idx) => {
+            const tab = document.createElement('div');
+            tab.className = `embed-tab ${idx === selectedEmbedIndex ? 'active' : ''}`;
+            tab.innerHTML = `Embed ${idx+1} 
+                <button class="duplicate-embed" data-idx="${idx}" title="Duplicate"><i class="fas fa-copy"></i></button>
+                <button class="delete-embed" data-idx="${idx}" ${embeds.length === 1 ? 'disabled style="opacity:0.3;"' : ''}><i class="fas fa-trash"></i></button>`;
+            tab.addEventListener('click', (e) => { if(e.target.closest('.delete-embed') || e.target.closest('.duplicate-embed')) return; selectedEmbedIndex = idx; rebuildEditorUI(); refreshEmbedListUI(); updatePreviewAndJson(); });
+            const dupBtn = tab.querySelector('.duplicate-embed');
+            if(dupBtn) dupBtn.addEventListener('click', (e) => { e.stopPropagation(); duplicateEmbed(idx); });
+            const delBtn = tab.querySelector('.delete-embed');
+            if(delBtn && embeds.length > 1) delBtn.addEventListener('click', (e) => { e.stopPropagation(); embeds.splice(idx,1); if(selectedEmbedIndex >= embeds.length) selectedEmbedIndex = embeds.length-1; if(selectedEmbedIndex<0) selectedEmbedIndex=0; rebuildEditorUI(); refreshEmbedListUI(); updatePreviewAndJson(); });
+            container.appendChild(tab);
+        });
+    }
+
+    function duplicateEmbed(idx) {
+        const original = embeds[idx];
+        const copy = JSON.parse(JSON.stringify(original));
+        copy.title = copy.title + " (Copy)";
+        embeds.splice(idx + 1, 0, copy);
+        selectedEmbedIndex = idx + 1;
+        rebuildEditorUI();
+        refreshEmbedListUI();
+        updatePreviewAndJson();
+        showStatus(`✅ Duplicated embed ${idx+1}`, true);
+    }
+
+    function addNewEmbed() {
+        embeds.push({ title: "New Embed", description: "", color: 0x57f287, author: { name:"", icon_url:"", url:"" }, footer: { text:"", icon_url:"" }, timestamp: null, thumbnail: { url:"" }, image: { url:"" }, fields: [] });
+        selectedEmbedIndex = embeds.length-1;
+        rebuildEditorUI();
+        refreshEmbedListUI();
+        updatePreviewAndJson();
+    }
+
+    async function sendToDiscord() {
+        const url = document.getElementById('webhookUrl').value.trim();
+        if(!url || !url.startsWith('https://discord.com/api/webhooks/')) { showStatus("❌ Valid webhook URL required", false); return; }
+        const payload = getFullPayload();
+        try {
+            const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const text = await res.text();
+            if(res.ok) showStatus(`✅ Sent! ${embeds.length} embed(s)${payload.content ? ' + message' : ''}`, true);
+            else showStatus(`❌ Error ${res.status}: ${text}`, false);
+        } catch(e) { showStatus(`❌ Network error: ${e.message}`, false); }
+    }
+
+    function showStatus(msg, ok) { const div = document.getElementById('statusMsg'); div.innerHTML = `<i class="fas ${ok ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i> ${msg}`; div.style.background = ok ? '#1a3b2e' : '#3b2a2a'; setTimeout(() => div.style.background = '#111214', 2000); }
+
+    createEmojiPicker('emojiPickerMsg', 'simpleMessage');
+    document.getElementById('emojiBtnMsg')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const picker = document.getElementById('emojiPickerMsg');
+        picker.style.display = picker.style.display === 'flex' ? 'none' : 'flex';
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.emoji-picker') && !e.target.closest('.emoji-btn')) {
+            document.querySelectorAll('.emoji-picker').forEach(p => p.style.display = 'none');
+        }
+    });
+
+    document.getElementById('sendBtn')?.addEventListener('click', sendToDiscord);
+    document.getElementById('addEmbedBtn')?.addEventListener('click', addNewEmbed);
+    simpleMessageInput?.addEventListener('input', () => { updatePreviewAndJson(); });
+    document.getElementById('visualModeBtn')?.addEventListener('click', () => setMode("visual"));
+    document.getElementById('jsonModeBtn')?.addEventListener('click', () => setMode("json"));
+    document.getElementById('applyJsonBtn')?.addEventListener('click', applyJsonToVisual);
+    document.getElementById('formatJsonBtn')?.addEventListener('click', formatJson);
+
+    rebuildEditorUI();
+    refreshEmbedListUI();
+    updatePreviewAndJson();
+    setMode("visual");
+    updateWebhookInfoDisplay();
+</script>
+</body>
+</html>
