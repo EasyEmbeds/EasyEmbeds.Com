@@ -69,6 +69,18 @@
         .simple-msg-area label { font-size: 0.7rem; margin-bottom: 4px; display: block; }
         .simple-msg-area textarea { font-size: 0.75rem; padding: 8px; border-radius: 10px; background: #111214; border: 1px solid #3c3f45; color: white; width: 100%; resize: vertical; font-family: inherit; }
         
+        /* Character counter styles */
+        .char-counter { font-size: 0.6rem; margin-top: 3px; display: flex; justify-content: flex-end; font-family: monospace; }
+        .char-counter.good { color: #23a559; }
+        .char-counter.warning { color: #f0b232; }
+        .char-counter.danger { color: #f23f42; }
+        
+        /* BIGGER description textarea */
+        .description-textarea { 
+            min-height: 150px !important; 
+            resize: vertical;
+        }
+        
         .embed-toolbar { display: flex; justify-content: space-between; align-items: center; margin: 10px 0 8px; }
         .embed-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
         .embed-tab { background: #1e1f22; padding: 4px 12px; border-radius: 24px; cursor: pointer; font-size: 0.7rem; border: 1px solid #3c3f45; display: inline-flex; align-items: center; gap: 6px; }
@@ -79,11 +91,15 @@
         .form-group { margin-bottom: 12px; position: relative; }
         label { font-size: 0.7rem; margin-bottom: 4px; display: block; }
         input, textarea, .color-row { width: 100%; background: #111214; border: 1px solid #3c3f45; border-radius: 8px; padding: 6px 8px; color: white; font-size: 0.75rem; }
+        /* Bigger description specific */
+        textarea#descInput { min-height: 150px; }
         .color-row { display: flex; align-items: center; gap: 8px; padding: 4px 8px; }
         .color-row input[type="color"] { width: 36px; height: 28px; padding: 0; }
         .fields-container { background: #1e1f22; border-radius: 10px; padding: 8px; margin-top: 6px; }
         .field-item { background: #2b2d31; border-radius: 8px; padding: 8px; margin-bottom: 8px; }
-        .remove-field { background: #f23f42; border: none; color: white; padding: 3px 8px; border-radius: 16px; cursor: pointer; font-size: 0.65rem; margin-top: 4px; }
+        .field-name-wrapper { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
+        .field-name-wrapper input { flex: 1; }
+        .remove-field { background: #f23f42; border: none; color: white; padding: 3px 8px; border-radius: 16px; cursor: pointer; font-size: 0.65rem; }
         .add-field-btn { background: #2b2d31; border: 1px solid #5865f2; border-radius: 20px; padding: 4px 10px; font-size: 0.7rem; cursor: pointer; margin-top: 6px; }
         .json-editor { display: none; }
         .json-editor textarea { width: 100%; min-height: 300px; font-family: monospace; font-size: 0.7rem; padding: 8px; background: #111214; border: 1px solid #3c3f45; border-radius: 8px; color: white; }
@@ -137,7 +153,7 @@
             <a href="https://discord.gg/pt2fHbMckc" target="_blank" class="support-btn"><i class="fas fa-headset"></i> Support</a>
         </div>
     </div>
-    <div class="sub">Discord webhook builder – Webhook preview, duplicate embeds, JSON editor, emoji picker, dark/light theme.</div>
+    <div class="sub">Discord webhook builder – Character counter, Webhook preview, Duplicate embeds, JSON editor, Emoji picker, Dark/Light theme.</div>
 
     <div class="builder">
         <div class="editor-panel">
@@ -190,13 +206,14 @@
     <div class="changelog">
         <h2><i class="fas fa-gift"></i> What's New</h2>
         <ul>
+            <li><strong>📏 Bigger Description Box</strong> – Description textarea is now larger and easier to write long messages.</li>
+            <li><strong>📊 Character Counter</strong> – Shows remaining characters for title (256), description (2000), footer (2048), and field names/values (256/1024).</li>
             <li><strong>🖼️ Webhook Name & Avatar</strong> – Shows in live preview after clicking Load.</li>
             <li><strong>✨ Duplicate Embed</strong> – Clone any embed with one click.</li>
             <li><strong>😀 Emoji Picker</strong> – Click smiley icon to insert emojis.</li>
             <li><strong>🌓 Dark/Light Theme</strong> – Toggle between themes.</li>
             <li><strong>📝 JSON Editor</strong> – Switch between Visual and JSON mode.</li>
             <li><strong>🎨 Color Picker</strong> – Choose any color for embed border.</li>
-            <li><strong>📎 Multiple Embeds</strong> – Add, duplicate, delete embeds.</li>
         </ul>
         <button id="closeChangelog" class="close-changelog">Got it!</button>
     </div>
@@ -204,10 +221,10 @@
 
 <script>
     // Changelog
-    let changelogShown = sessionStorage.getItem('easyembeds_changelog_v4');
+    let changelogShown = sessionStorage.getItem('easyembeds_changelog_v6');
     if (!changelogShown) {
         document.getElementById('changelogModal').style.display = 'flex';
-        sessionStorage.setItem('easyembeds_changelog_v4', 'true');
+        sessionStorage.setItem('easyembeds_changelog_v6', 'true');
     }
     document.getElementById('changelogBtn')?.addEventListener('click', () => {
         document.getElementById('changelogModal').style.display = 'flex';
@@ -223,6 +240,22 @@
 
     function escapeHtml(str) { return String(str ?? '').replace(/[&<>]/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;' }[m])); }
     function intToHex(c) { return '#' + (c & 0xFFFFFF).toString(16).padStart(6,'0'); }
+
+    // Character counter helper
+    function updateCharCounter(element, max, warningAt = 0.8) {
+        if (!element) return;
+        const length = element.value.length;
+        const remaining = max - length;
+        const percent = length / max;
+        let className = 'good';
+        if (percent >= 0.95) className = 'danger';
+        else if (percent >= 0.8) className = 'warning';
+        element.nextElementSibling?.classList?.remove('good', 'warning', 'danger');
+        element.nextElementSibling?.classList?.add(className);
+        if (element.nextElementSibling) {
+            element.nextElementSibling.innerHTML = `${length} / ${max} characters`;
+        }
+    }
 
     // Webhook Info
     let currentWebhookInfo = null;
@@ -349,13 +382,15 @@
         if (!editorDiv) return;
         editorDiv.innerHTML = `
             <div class="form-group">
-                <div class="label-with-emoji"><label>Title</label><button class="emoji-btn" id="emojiBtnTitle"><i class="fas fa-smile"></i></button></div>
+                <div class="label-with-emoji"><label>Title (max 256)</label><button class="emoji-btn" id="emojiBtnTitle"><i class="fas fa-smile"></i></button></div>
                 <input type="text" id="titleInput" value="${escapeHtml(embed.title)}">
+                <div class="char-counter">${embed.title.length} / 256 characters</div>
                 <div id="emojiPickerTitle" class="emoji-picker"></div>
             </div>
             <div class="form-group">
-                <div class="label-with-emoji"><label>Description</label><button class="emoji-btn" id="emojiBtnDesc"><i class="fas fa-smile"></i></button></div>
-                <textarea id="descInput">${escapeHtml(embed.description)}</textarea>
+                <div class="label-with-emoji"><label>Description (max 2000) - Bigger box for easier writing</label><button class="emoji-btn" id="emojiBtnDesc"><i class="fas fa-smile"></i></button></div>
+                <textarea id="descInput" class="description-textarea" rows="6">${escapeHtml(embed.description)}</textarea>
+                <div class="char-counter">${embed.description.length} / 2000 characters</div>
                 <div id="emojiPickerDesc" class="emoji-picker"></div>
             </div>
             <div class="form-group"><label>Color</label><div class="color-row"><input type="color" id="colorPicker" value="${intToHex(embed.color)}"><span>${intToHex(embed.color)}</span></div></div>
@@ -364,7 +399,9 @@
             <div class="form-group"><label>Author URL</label><input type="text" id="authorUrl" value="${escapeHtml(embed.author.url)}"></div>
             <div class="form-group"><label>Thumbnail URL</label><input type="text" id="thumbUrl" value="${escapeHtml(embed.thumbnail.url)}"></div>
             <div class="form-group"><label>Main Image URL</label><input type="text" id="imageUrl" value="${escapeHtml(embed.image.url)}"></div>
-            <div class="form-group"><label>Footer Text</label><input type="text" id="footerText" value="${escapeHtml(embed.footer.text)}"></div>
+            <div class="form-group"><label>Footer Text (max 2048)</label><input type="text" id="footerText" value="${escapeHtml(embed.footer.text)}">
+                <div class="char-counter" id="footerCounter">${embed.footer.text.length} / 2048 characters</div>
+            </div>
             <div class="form-group"><label>Footer Icon URL</label><input type="text" id="footerIcon" value="${escapeHtml(embed.footer.icon_url)}"></div>
             <div class="form-group"><label>Timestamp (ISO)</label><input type="text" id="timestampVal" value="${embed.timestamp || ''}"></div>
             <div class="form-group"><label>Fields</label><div id="fieldsDynamicContainer" class="fields-container"></div><button type="button" id="addFieldBtn" class="add-field-btn">+ Add field</button></div>
@@ -383,15 +420,59 @@
             picker.style.display = picker.style.display === 'flex' ? 'none' : 'flex';
         });
 
-        document.getElementById('titleInput')?.addEventListener('input', (e) => { embed.title = e.target.value; updatePreviewAndJson(); });
-        document.getElementById('descInput')?.addEventListener('input', (e) => { embed.description = e.target.value; updatePreviewAndJson(); });
+        // Title counter
+        const titleInput = document.getElementById('titleInput');
+        const titleCounter = titleInput?.nextElementSibling;
+        titleInput?.addEventListener('input', (e) => {
+            embed.title = e.target.value;
+            if (titleCounter) {
+                const len = e.target.value.length;
+                titleCounter.innerHTML = `${len} / 256 characters`;
+                if (len >= 246) titleCounter.classList.add('danger');
+                else if (len >= 205) titleCounter.classList.add('warning');
+                else titleCounter.classList.remove('warning', 'danger');
+            }
+            updatePreviewAndJson();
+        });
+        if (titleCounter) updateCharCounter(titleInput, 256);
+
+        // Description counter (bigger box)
+        const descInput = document.getElementById('descInput');
+        const descCounter = descInput?.nextElementSibling;
+        descInput?.addEventListener('input', (e) => {
+            embed.description = e.target.value;
+            if (descCounter) {
+                const len = e.target.value.length;
+                descCounter.innerHTML = `${len} / 2000 characters`;
+                if (len >= 1900) descCounter.classList.add('danger');
+                else if (len >= 1600) descCounter.classList.add('warning');
+                else descCounter.classList.remove('warning', 'danger');
+            }
+            updatePreviewAndJson();
+        });
+        if (descCounter) updateCharCounter(descInput, 2000);
+
+        // Footer counter
+        const footerInput = document.getElementById('footerText');
+        const footerCounter = document.getElementById('footerCounter');
+        footerInput?.addEventListener('input', (e) => {
+            embed.footer.text = e.target.value;
+            if (footerCounter) {
+                const len = e.target.value.length;
+                footerCounter.innerHTML = `${len} / 2048 characters`;
+                if (len >= 1946) footerCounter.classList.add('danger');
+                else if (len >= 1638) footerCounter.classList.add('warning');
+                else footerCounter.classList.remove('warning', 'danger');
+            }
+            updatePreviewAndJson();
+        });
+
         document.getElementById('colorPicker')?.addEventListener('input', (e) => { embed.color = parseInt(e.target.value.slice(1), 16); updatePreviewAndJson(); });
         document.getElementById('authorName')?.addEventListener('input', (e) => { embed.author.name = e.target.value; updatePreviewAndJson(); });
         document.getElementById('authorIcon')?.addEventListener('input', (e) => { embed.author.icon_url = e.target.value; updatePreviewAndJson(); });
         document.getElementById('authorUrl')?.addEventListener('input', (e) => { embed.author.url = e.target.value; updatePreviewAndJson(); });
         document.getElementById('thumbUrl')?.addEventListener('input', (e) => { embed.thumbnail.url = e.target.value; updatePreviewAndJson(); });
         document.getElementById('imageUrl')?.addEventListener('input', (e) => { embed.image.url = e.target.value; updatePreviewAndJson(); });
-        document.getElementById('footerText')?.addEventListener('input', (e) => { embed.footer.text = e.target.value; updatePreviewAndJson(); });
         document.getElementById('footerIcon')?.addEventListener('input', (e) => { embed.footer.icon_url = e.target.value; updatePreviewAndJson(); });
         document.getElementById('timestampVal')?.addEventListener('input', (e) => { embed.timestamp = e.target.value || null; updatePreviewAndJson(); });
 
@@ -401,11 +482,45 @@
             fieldsContainer.innerHTML = '';
             embed.fields.forEach((f, idx) => {
                 const div = document.createElement('div'); div.className = 'field-item';
-                div.innerHTML = `<input placeholder="Name" class="f-name" value="${escapeHtml(f.name)}"><textarea placeholder="Value" class="f-value">${escapeHtml(f.value)}</textarea><label><input type="checkbox" class="f-inline" ${f.inline ? 'checked' : ''}> Inline</label><button class="remove-field">Remove</button>`;
-                div.querySelector('.f-name').addEventListener('input', (e) => { embed.fields[idx].name = e.target.value; updatePreviewAndJson(); });
-                div.querySelector('.f-value').addEventListener('input', (e) => { embed.fields[idx].value = e.target.value; updatePreviewAndJson(); });
-                div.querySelector('.f-inline').addEventListener('change', (e) => { embed.fields[idx].inline = e.target.checked; updatePreviewAndJson(); });
-                div.querySelector('.remove-field').addEventListener('click', () => { embed.fields.splice(idx,1); renderFields(); updatePreviewAndJson(); });
+                div.innerHTML = `
+                    <div class="field-name-wrapper">
+                        <input placeholder="Name (max 256)" class="f-name" value="${escapeHtml(f.name)}">
+                        <button class="remove-field">✕</button>
+                    </div>
+                    <div class="char-counter f-name-counter">${f.name.length} / 256 characters</div>
+                    <textarea placeholder="Value (max 1024)" class="f-value" rows="3">${escapeHtml(f.value)}</textarea>
+                    <div class="char-counter f-value-counter">${f.value.length} / 1024 characters</div>
+                    <label><input type="checkbox" class="f-inline" ${f.inline ? 'checked' : ''}> Inline</label>
+                `;
+                const nameInput = div.querySelector('.f-name');
+                const valueInput = div.querySelector('.f-value');
+                const nameCounter = div.querySelector('.f-name-counter');
+                const valueCounter = div.querySelector('.f-value-counter');
+                
+                nameInput?.addEventListener('input', (e) => {
+                    embed.fields[idx].name = e.target.value;
+                    if (nameCounter) {
+                        const len = e.target.value.length;
+                        nameCounter.innerHTML = `${len} / 256 characters`;
+                        if (len >= 246) nameCounter.classList.add('danger');
+                        else if (len >= 205) nameCounter.classList.add('warning');
+                        else nameCounter.classList.remove('warning', 'danger');
+                    }
+                    updatePreviewAndJson();
+                });
+                valueInput?.addEventListener('input', (e) => {
+                    embed.fields[idx].value = e.target.value;
+                    if (valueCounter) {
+                        const len = e.target.value.length;
+                        valueCounter.innerHTML = `${len} / 1024 characters`;
+                        if (len >= 973) valueCounter.classList.add('danger');
+                        else if (len >= 819) valueCounter.classList.add('warning');
+                        else valueCounter.classList.remove('warning', 'danger');
+                    }
+                    updatePreviewAndJson();
+                });
+                div.querySelector('.f-inline')?.addEventListener('change', (e) => { embed.fields[idx].inline = e.target.checked; updatePreviewAndJson(); });
+                div.querySelector('.remove-field')?.addEventListener('click', () => { embed.fields.splice(idx,1); renderFields(); updatePreviewAndJson(); });
                 fieldsContainer.appendChild(div);
             });
         }
