@@ -3,719 +3,1040 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EasyEmbeds – Discord Webhook Builder</title>
-    <link rel="icon" type="image/png" href="https://files.catbox.moe/x9w3b6.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>EasyEmbed Fisty Club · Multi-Webhook Sender</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #1e1f22; font-family: 'Segoe UI', system-ui, sans-serif; color: #e1e4e8; padding: 16px; font-size: 13px; transition: background 0.2s, color 0.2s; }
-        
-        body.light-mode { background: #f5f5f5; color: #111214; }
-        body.light-mode .editor-panel { background: #ffffff; }
-        body.light-mode .preview-panel { background: #f0f0f0; border-color: #ccc; }
-        body.light-mode .preview-embed, body.light-mode .preview-simple-message { background: #ffffff; border-color: #ddd; }
-        body.light-mode .embed-tab, body.light-mode .social-btn { background: #e0e0e0; border-color: #ccc; color: #111; }
-        body.light-mode .embed-tab.active { background: #5865f2; color: white; }
-        body.light-mode .form-group input, body.light-mode .form-group textarea, 
-        body.light-mode .simple-msg-area textarea, body.light-mode .webhook-row input, 
-        body.light-mode .json-editor textarea { background: #fff; color: #111; border-color: #ccc; }
-        body.light-mode .status-msg { background: #e0e0e0; }
-        body.light-mode .mode-toggle { background: #e0e0e0; }
-        body.light-mode .add-embed-btn { background: #e0e0e0; color: #111; }
-        body.light-mode .fields-container { background: #f0f0f0; }
-        body.light-mode .field-item { background: #e8e8e8; }
-        body.light-mode h1 { background: linear-gradient(120deg, #5865f2, #4752c4); background-clip: text; -webkit-background-clip: text; color: transparent; }
-        body.light-mode .logo img { filter: invert(1); }
-        body.light-mode .webhook-info { background: #e8e8e8; }
-        body.light-mode .changelog-overlay .changelog { background: #fff; color: #111; }
-        
-        .app { max-width: 1400px; margin: 0 auto; }
-        .header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 6px; }
-        .header-left { display: flex; align-items: center; gap: 10px; }
-        .logo { width: 36px; height: 36px; background: #2b2d31; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-        .logo img { width: 100%; height: 100%; object-fit: cover; }
-        h1 { font-size: 1.3rem; font-weight: 700; background: linear-gradient(120deg, #ffffff, #b5bac1); background-clip: text; -webkit-background-clip: text; color: transparent; }
-        .header-right { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-        .social-btn, .support-btn, .theme-btn, .changelog-btn { padding: 4px 10px; border-radius: 24px; text-decoration: none; font-weight: 500; font-size: 0.7rem; display: inline-flex; align-items: center; gap: 4px; transition: 0.2s; cursor: pointer; border: none; }
-        .social-btn { background: #2b2d31; border: 1px solid #3c3f45; color: white; }
-        .support-btn { background: #5865f2; color: white; }
-        .theme-btn { background: #4e5058; color: white; }
-        .changelog-btn { background: #23a559; color: white; }
-        .builder { display: flex; gap: 16px; flex-wrap: wrap; }
-        .editor-panel, .preview-panel { padding: 14px; border-radius: 12px; }
-        .editor-panel { flex: 1.2; min-width: 280px; background: #2b2d31; }
-        .preview-panel { flex: 1; min-width: 280px; background: #1e1f22; border: 1px solid #3c3f45; }
-        .panel-title { font-size: 1rem; margin-bottom: 12px; padding-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: space-between; border-bottom: 1px solid #3c3f45; }
-        .mode-toggle { display: flex; gap: 4px; background: #1e1f22; padding: 2px; border-radius: 24px; }
-        .mode-btn { padding: 4px 12px; font-size: 0.7rem; border-radius: 20px; background: none; border: none; cursor: pointer; color: #b5bac1; }
-        .mode-btn.active { background: #5865f2; color: white; }
-        
-        .webhook-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-        .webhook-row input { flex: 2; background: #111214; border: 1px solid #3c3f45; padding: 8px 12px; border-radius: 10px; color: white; font-size: 0.8rem; }
-        .webhook-row button { background: #5865f2; border: none; padding: 0 14px; border-radius: 10px; font-weight: 600; cursor: pointer; color: white; font-size: 0.75rem; }
-        .load-webhook-btn { background: #4e5058 !important; }
-        .load-webhook-btn:hover { background: #5865f2 !important; }
-        
-        .webhook-info { background: #2b2d31; border-radius: 10px; padding: 8px 12px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; border-left: 3px solid #5865f2; }
-        .webhook-avatar { width: 32px; height: 32px; border-radius: 50%; background: #1e1f22; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .webhook-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .webhook-avatar i { font-size: 1.2rem; color: #5865f2; }
-        .webhook-name { font-weight: 600; font-size: 0.8rem; flex: 1; }
-        .webhook-name i { color: #5865f2; margin-right: 5px; }
-        .reload-webhook { background: none; border: none; color: #b5bac1; cursor: pointer; font-size: 0.7rem; padding: 4px 8px; border-radius: 16px; }
-        .reload-webhook:hover { background: #4e5058; color: white; }
-        
-        .simple-msg-area { margin-bottom: 16px; position: relative; }
-        .simple-msg-area label { font-size: 0.7rem; margin-bottom: 4px; display: block; }
-        .simple-msg-area textarea { font-size: 0.75rem; padding: 8px; border-radius: 10px; background: #111214; border: 1px solid #3c3f45; color: white; width: 100%; resize: vertical; font-family: inherit; }
-        
-        /* Character counter styles */
-        .char-counter { font-size: 0.6rem; margin-top: 3px; display: flex; justify-content: flex-end; font-family: monospace; }
-        .char-counter.good { color: #23a559; }
-        .char-counter.warning { color: #f0b232; }
-        .char-counter.danger { color: #f23f42; }
-        
-        /* BIGGER description textarea */
-        .description-textarea { 
-            min-height: 150px !important; 
-            resize: vertical;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        
-        .embed-toolbar { display: flex; justify-content: space-between; align-items: center; margin: 10px 0 8px; }
-        .embed-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-        .embed-tab { background: #1e1f22; padding: 4px 12px; border-radius: 24px; cursor: pointer; font-size: 0.7rem; border: 1px solid #3c3f45; display: inline-flex; align-items: center; gap: 6px; }
-        .embed-tab.active { background: #5865f2; }
-        .delete-embed { background: none; border: none; color: #f23f42; margin-left: 6px; cursor: pointer; font-size: 0.7rem; }
-        .duplicate-embed { background: none; border: none; color: #23a559; cursor: pointer; font-size: 0.7rem; }
-        .add-embed-btn { background: #2b2d31; border: 1px dashed #5865f2; border-radius: 24px; padding: 4px 12px; font-size: 0.7rem; cursor: pointer; color: #b5bac1; }
-        .form-group { margin-bottom: 12px; position: relative; }
-        label { font-size: 0.7rem; margin-bottom: 4px; display: block; }
-        input, textarea, .color-row { width: 100%; background: #111214; border: 1px solid #3c3f45; border-radius: 8px; padding: 6px 8px; color: white; font-size: 0.75rem; }
-        /* Bigger description specific */
-        textarea#descInput { min-height: 150px; }
-        .color-row { display: flex; align-items: center; gap: 8px; padding: 4px 8px; }
-        .color-row input[type="color"] { width: 36px; height: 28px; padding: 0; }
-        .fields-container { background: #1e1f22; border-radius: 10px; padding: 8px; margin-top: 6px; }
-        .field-item { background: #2b2d31; border-radius: 8px; padding: 8px; margin-bottom: 8px; }
-        .field-name-wrapper { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
-        .field-name-wrapper input { flex: 1; }
-        .remove-field { background: #f23f42; border: none; color: white; padding: 3px 8px; border-radius: 16px; cursor: pointer; font-size: 0.65rem; }
-        .add-field-btn { background: #2b2d31; border: 1px solid #5865f2; border-radius: 20px; padding: 4px 10px; font-size: 0.7rem; cursor: pointer; margin-top: 6px; }
-        .json-editor { display: none; }
-        .json-editor textarea { width: 100%; min-height: 300px; font-family: monospace; font-size: 0.7rem; padding: 8px; background: #111214; border: 1px solid #3c3f45; border-radius: 8px; color: white; }
-        .json-actions { margin-top: 8px; display: flex; gap: 8px; }
-        .json-actions button { background: #4e5058; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; color: white; font-size: 0.7rem; }
-        .visual-editor { display: block; }
-        
-        .preview-simple-message { background: #2b2d31; border-radius: 10px; padding: 10px; margin-bottom: 12px; font-size: 0.8rem; white-space: pre-wrap; }
-        .preview-embed { background: #2b2d31; border-radius: 10px; margin-bottom: 12px; border-left: 2px solid #5865f2; padding: 10px; }
-        .embed-author { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 0.75rem; }
-        .embed-author img { width: 18px; height: 18px; border-radius: 50%; }
-        .embed-title { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
-        .embed-desc { font-size: 0.75rem; margin: 6px 0; color: #dbdee1; white-space: pre-wrap; }
-        .embed-fields { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; }
-        .field { flex: 1; min-width: 140px; background: #1e1f22; padding: 6px; border-radius: 6px; }
-        .field-name { font-weight: 600; font-size: 0.7rem; }
-        .field-value { font-size: 0.7rem; color: #b5bac1; white-space: pre-wrap; }
-        .embed-footer { font-size: 0.65rem; margin-top: 8px; border-top: 1px solid #3c3f45; padding-top: 6px; display: flex; justify-content: space-between; }
-        .embed-img img, .embed-thumb img { max-width: 100%; border-radius: 8px; max-height: 150px; margin-top: 6px; }
-        .status-msg { margin-top: 12px; padding: 8px; border-radius: 8px; background: #111214; font-size: 0.7rem; }
-        button:active { transform: scale(0.98); }
-        
-        .emoji-picker { display: none; position: absolute; background: #2b2d31; border: 1px solid #3c3f45; border-radius: 12px; padding: 8px; width: 260px; max-height: 180px; overflow-y: auto; z-index: 100; flex-wrap: wrap; gap: 4px; }
-        body.light-mode .emoji-picker { background: #fff; border-color: #ccc; }
-        .emoji-picker span { cursor: pointer; font-size: 1.2rem; padding: 4px; border-radius: 6px; display: inline-block; }
-        .emoji-picker span:hover { background: #5865f2; }
-        .emoji-btn { background: none; border: none; cursor: pointer; color: #b5bac1; font-size: 0.8rem; margin-left: 4px; }
-        body.light-mode .emoji-btn { color: #5865f2; }
-        .label-with-emoji { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-        
-        .changelog-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
-        .changelog { background: #1e1f22; border-radius: 16px; padding: 20px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; border-left: 4px solid #5865f2; }
-        .changelog h2 { margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-        .changelog ul { margin-left: 20px; margin-bottom: 16px; }
-        .changelog li { margin: 8px 0; font-size: 0.8rem; }
-        .close-changelog { background: #5865f2; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; color: white; font-size: 0.75rem; margin-top: 8px; }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0c12;
+            color: #eef2ff;
+            padding: 20px;
+            transition: background 0.2s, color 0.2s;
+        }
+        body.light {
+            background: #f2f4f8;
+            color: #1e293b;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .logo {
+            font-size: 1.6rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #eef2ff, #e63946);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        body.light .logo {
+            background: linear-gradient(135deg, #1e293b, #3b82f6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .support-link {
+            color: #8a98b9;
+            text-decoration: none;
+            margin-right: 15px;
+        }
+        body.light .support-link {
+            color: #4b5563;
+        }
+        .theme-btn {
+            background: #1a1f32;
+            border: 1px solid #2a314b;
+            color: #eef2ff;
+            padding: 5px 12px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        body.light .theme-btn {
+            background: #eef2ff;
+            border-color: #cbd5e1;
+            color: #1e293b;
+        }
+
+        /* TABS */
+        .tabs-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #2a314b;
+            padding-bottom: 8px;
+        }
+        body.light .tabs-bar {
+            border-bottom-color: #e2e8f0;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 8px 20px;
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 40px;
+            cursor: pointer;
+            color: #9ca3af;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        body.light .tab-btn {
+            color: #4b5563;
+        }
+        .tab-btn.active {
+            background: #1a1f32;
+            color: #eef2ff;
+        }
+        body.light .tab-btn.active {
+            background: #eef2ff;
+            color: #1e293b;
+        }
+        .tab-btn .red-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #ef4444;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 2px #ef4444;
+        }
+        .tab-panel {
+            display: none;
+        }
+        .tab-panel.active-panel {
+            display: block;
+        }
+
+        /* EasyEmbend panel */
+        .easyembend-content {
+            background: #0f1322;
+            border-radius: 24px;
+            padding: 30px;
+            text-align: center;
+            border: 1px solid #252b3d;
+        }
+        body.light .easyembend-content {
+            background: white;
+            border-color: #e9edf2;
+        }
+        .easyembend-logo {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .easyembend-logo img {
+            max-width: 150px;
+            border-radius: 32px;
+        }
+
+        /* Builder + preview */
+        .two-columns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .builder-panel, .preview-panel {
+            background: #0f1322;
+            border-radius: 24px;
+            padding: 20px;
+            border: 1px solid #252b3d;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        body.light .builder-panel, body.light .preview-panel {
+            background: white;
+            border-color: #e9edf2;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .builder-panel {
+            flex: 1.5;
+            min-width: 300px;
+        }
+        .preview-panel {
+            flex: 1;
+            min-width: 280px;
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+        body.light label {
+            color: #1e293b;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #1f253f;
+            border-radius: 12px;
+            font-family: inherit;
+            background: #0b0f1a;
+            color: #eef2ff;
+        }
+        body.light input, body.light textarea, body.light select {
+            background: white;
+            border-color: #cfdee9;
+            color: #1e293b;
+        }
+        button {
+            background: #e63946;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        body.light button {
+            background: #3b82f6;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .send-btn {
+            width: 100%;
+            margin: 10px 0;
+            padding: 12px;
+            font-size: 1.1rem;
+            background: #e63946;
+        }
+        body.light .send-btn {
+            background: #3b82f6;
+        }
+        .add-embed-btn {
+            background: #1a1f32;
+            color: #eef2ff;
+            border: 1px solid #2a314b;
+            width: 100%;
+            margin: 10px 0;
+        }
+        body.light .add-embed-btn {
+            background: #eef2ff;
+            color: #1e293b;
+            border-color: #cbd5e1;
+        }
+        .embed-card {
+            border: 1px solid #252b3d;
+            border-radius: 20px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        body.light .embed-card {
+            border-color: #e9edf2;
+        }
+        .embed-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .remove-embed {
+            background: #3a1a1a;
+            color: #ff8888;
+            padding: 2px 10px;
+            font-size: 0.7rem;
+        }
+        body.light .remove-embed {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+        .color-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .color-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid #2a314b;
+        }
+        body.light .color-preview {
+            border-color: #ccc;
+        }
+        .field-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        .field-row input {
+            flex: 1;
+        }
+        .remove-field {
+            background: #3a1a1a;
+            color: #ff8888;
+            width: 28px;
+            height: 28px;
+            border-radius: 40px;
+        }
+        body.light .remove-field {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+        .preview-embed {
+            background: #0b0f1a;
+            border-radius: 16px;
+            padding: 12px;
+            border-left: 4px solid #e63946;
+            margin-top: 12px;
+        }
+        body.light .preview-embed {
+            background: #f8fafd;
+            border-left-color: #3b82f6;
+        }
+        .webhook-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .webhook-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #2a314b;
+            background-size: cover;
+        }
+        body.light .webhook-avatar {
+            background: #cbd5e1;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+        .success {
+            background: #1a3a2a;
+            color: #6ee7b7;
+        }
+        body.light .success {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .error {
+            background: #3a1a1a;
+            color: #ff8888;
+        }
+        body.light .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .progress-bar {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: #1a1f32;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            display: none;
+            color: #eef2ff;
+        }
+        body.light .progress-bar {
+            background: #eef2ff;
+            color: #1e293b;
+        }
+        .webhook-count {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+        body.light .webhook-count {
+            color: #6b7280;
+        }
+        .club-badge {
+            display: inline-block;
+            background: #e63946;
+            color: white;
+            font-size: 0.6rem;
+            padding: 2px 10px;
+            border-radius: 40px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        body.light .club-badge {
+            background: #3b82f6;
+        }
+        @media (max-width: 800px) {
+            .preview-panel { position: static; }
+        }
     </style>
 </head>
-<body>
-<div class="app">
-    <div class="header">
-        <div class="header-left">
-            <div class="logo"><img src="https://files.catbox.moe/x9w3b6.png" alt="EasyEmbeds Logo"></div>
-            <h1><i class="fab fa-discord"></i> EasyEmbeds</h1>
+<body class="dark">
+<div class="container">
+    <div class="top-bar">
+        <div class="logo">
+            EasyEmbed <span class="club-badge">FISTY CLUB</span>
         </div>
-        <div class="header-right">
-            <button id="changelogBtn" class="changelog-btn"><i class="fas fa-gift"></i> What's New</button>
-            <button id="themeToggleBtn" class="theme-btn"><i class="fas fa-moon"></i> Theme</button>
-            <a href="https://www.youtube.com/@easyembeds" target="_blank" class="social-btn"><i class="fab fa-youtube"></i> YouTube</a>
-            <a href="https://x.com/EasyEmbeds" target="_blank" class="social-btn"><i class="fab fa-x-twitter"></i> X</a>
-            <a href="https://discord.gg/pt2fHbMckc" target="_blank" class="support-btn"><i class="fas fa-headset"></i> Support</a>
+        <div>
+            <a href="https://discord.gg/mFPnGedKvA" target="_blank" class="support-link">Support Server</a>
+            <button id="themeToggle" class="theme-btn">☀️ Light Mode</button>
         </div>
     </div>
-    <div class="sub">Discord webhook builder – Character counter, Webhook preview, Duplicate embeds, JSON editor, Emoji picker, Dark/Light theme.</div>
 
-    <div class="builder">
-        <div class="editor-panel">
-            <div class="webhook-row">
-                <input type="text" id="webhookUrl" placeholder="Paste Discord webhook URL...">
-                <button id="loadWebhookBtn" class="load-webhook-btn"><i class="fas fa-sync-alt"></i> Load</button>
-                <button id="sendBtn"><i class="fas fa-paper-plane"></i> Send</button>
-            </div>
-            
-            <div id="webhookInfoContainer"></div>
-            
-            <div class="simple-msg-area">
-                <div class="label-with-emoji"><label>Simple Message (optional)</label><button class="emoji-btn" id="emojiBtnMsg"><i class="fas fa-smile"></i></button></div>
-                <textarea id="simpleMessage" rows="2" placeholder="Plain text..."></textarea>
-                <div id="emojiPickerMsg" class="emoji-picker"></div>
-            </div>
-            <div class="panel-title">
-                <span>Embeds</span>
-                <div class="mode-toggle">
-                    <button id="visualModeBtn" class="mode-btn active">Visual</button>
-                    <button id="jsonModeBtn" class="mode-btn">JSON</button>
+    <!-- TABS -->
+    <div class="tabs-bar">
+        <button class="tab-btn active" data-tab="builder">🛠️ Webhook Builder</button>
+        <button class="tab-btn" data-tab="easyembend">
+            <span>✨ EasyEmbend</span>
+            <span class="red-dot"></span>
+        </button>
+    </div>
+
+    <!-- TAB 1: BUILDER -->
+    <div id="builderPanel" class="tab-panel active-panel">
+        <div class="two-columns">
+            <div class="builder-panel">
+                <div class="form-group">
+                    <label>Webhook URLs (one per line — up to 30)</label>
+                    <textarea id="webhookUrls" rows="4" placeholder="https://discord.com/api/webhooks/...&#10;https://discord.com/api/webhooks/...&#10;https://discord.com/api/webhooks/..."></textarea>
+                    <div class="webhook-count" id="webhookCount">0 webhooks loaded</div>
                 </div>
-            </div>
-            <div id="visualEditor" class="visual-editor">
-                <div class="embed-toolbar">
-                    <div class="embed-list" id="embedList"></div>
-                    <button class="add-embed-btn" id="addEmbedBtn">+ Add embed</button>
+
+                <button id="sendBtn" class="send-btn">👊 FIST SEND · All Webhooks</button>
+                <div id="progressBar" class="progress-bar">Ready</div>
+
+                <div class="form-group">
+                    <label>Content (plain text above embeds)</label>
+                    <textarea id="content" rows="2" placeholder="Optional text"></textarea>
+                    <div id="contentCounter" style="font-size:0.7rem; text-align:right; color:#9ca3af;">0/2000</div>
                 </div>
-                <div id="currentEditor"></div>
-            </div>
-            <div id="jsonEditor" class="json-editor">
-                <textarea id="jsonPayload"></textarea>
-                <div class="json-actions">
-                    <button id="applyJsonBtn">Apply & Sync</button>
-                    <button id="formatJsonBtn">Format</button>
+
+                <div id="embedsContainer"></div>
+                <button id="addEmbedBtn" class="add-embed-btn">+ Add Embed</button>
+
+                <div class="form-group" style="margin-top: 16px;">
+                    <label>Message Link (to edit an existing message)</label>
+                    <input type="text" id="messageLink" placeholder="https://discord.com/channels/...">
+                    <div style="font-size:0.7rem; margin-top:4px; color:#9ca3af;">If set, edits the message on ALL webhooks (must be same channel).</div>
                 </div>
-                <div class="status-msg" style="margin-top: 8px;" id="jsonStatus">Edit JSON, then click Apply.</div>
+
+                <div id="statusMsg" class="status" style="display: none;"></div>
             </div>
-        </div>
-        <div class="preview-panel">
-            <div class="panel-title">Live preview</div>
-            <div id="previewContainer"></div>
-            <div class="status-msg" id="statusMsg">Ready. Paste webhook URL → click Load → build → Send.</div>
+
+            <div class="preview-panel">
+                <h3 style="margin-bottom: 12px;">Live Preview</h3>
+                <div id="webhookInfo" class="webhook-info" style="display: none;">
+                    <div class="webhook-avatar" id="webhookAvatar"></div>
+                    <span id="webhookName"></span>
+                </div>
+                <div id="contentPreview" style="background:#0b0f1a; padding:8px; border-radius:12px; margin-bottom:12px; display:none;"></div>
+                <div id="previewArea"></div>
+                <div style="font-size:0.7rem; text-align:center; margin-top:12px; color:#9ca3af;">Updates as you type</div>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Changelog Modal -->
-<div id="changelogModal" class="changelog-overlay">
-    <div class="changelog">
-        <h2><i class="fas fa-gift"></i> What's New</h2>
-        <ul>
-            <li><strong>📏 Bigger Description Box</strong> – Description textarea is now larger and easier to write long messages.</li>
-            <li><strong>📊 Character Counter</strong> – Shows remaining characters for title (256), description (2000), footer (2048), and field names/values (256/1024).</li>
-            <li><strong>🖼️ Webhook Name & Avatar</strong> – Shows in live preview after clicking Load.</li>
-            <li><strong>✨ Duplicate Embed</strong> – Clone any embed with one click.</li>
-            <li><strong>😀 Emoji Picker</strong> – Click smiley icon to insert emojis.</li>
-            <li><strong>🌓 Dark/Light Theme</strong> – Toggle between themes.</li>
-            <li><strong>📝 JSON Editor</strong> – Switch between Visual and JSON mode.</li>
-            <li><strong>🎨 Color Picker</strong> – Choose any color for embed border.</li>
-        </ul>
-        <button id="closeChangelog" class="close-changelog">Got it!</button>
+    <!-- TAB 2: EASYEMBEND -->
+    <div id="easyembendPanel" class="tab-panel">
+        <div class="easyembend-content">
+            <div class="easyembend-logo">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23e63946'/%3E%3Ctext x='50' y='67' font-size='50' text-anchor='middle' fill='white' font-weight='bold'%3EEF%3C/text%3E%3C/svg%3E"
+                     alt="EasyEmbend Logo">
+            </div>
+            <h2>👊 EasyEmbend · Fisty Club</h2>
+            <p style="margin: 16px 0; color: #9ca3af;">This is your dedicated EasyEmbend section.  
+            The <span class="red-dot" style="display: inline-block; vertical-align: middle;"></span> <strong style="color:#eef2ff;">red dot</strong> on the tab is a notification badge.</p>
+            <p style="color: #9ca3af;">You can replace the logo above with your own image (just change the <code style="background:#1a1f32; padding:2px 8px; border-radius:6px;">src</code>).  
+            All Discord webhook tools work normally in the "Webhook Builder" tab.</p>
+            <hr style="margin: 24px 0; border-color: #252b3d;">
+            <p style="font-size: 0.9rem; color: #9ca3af;">💡 Click <strong style="color:#eef2ff;">Webhook Builder</strong> to send embeds to multiple webhooks at once.</p>
+        </div>
     </div>
 </div>
 
 <script>
-    // Changelog
-    let changelogShown = sessionStorage.getItem('easyembeds_changelog_v6');
-    if (!changelogShown) {
-        document.getElementById('changelogModal').style.display = 'flex';
-        sessionStorage.setItem('easyembeds_changelog_v6', 'true');
-    }
-    document.getElementById('changelogBtn')?.addEventListener('click', () => {
-        document.getElementById('changelogModal').style.display = 'flex';
-    });
-    document.getElementById('closeChangelog')?.addEventListener('click', () => {
-        document.getElementById('changelogModal').style.display = 'none';
-    });
-    window.addEventListener('click', (e) => {
-        if (e.target === document.getElementById('changelogModal')) {
-            document.getElementById('changelogModal').style.display = 'none';
-        }
+    // THEME TOGGLE (default dark)
+    let isDark = true;
+    document.getElementById('themeToggle').addEventListener('click', () => {
+        document.body.classList.toggle('light');
+        isDark = !isDark;
+        document.getElementById('themeToggle').textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+        localStorage.setItem('easyembed-theme', isDark ? 'dark' : 'light');
     });
 
-    function escapeHtml(str) { return String(str ?? '').replace(/[&<>]/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;' }[m])); }
-    function intToHex(c) { return '#' + (c & 0xFFFFFF).toString(16).padStart(6,'0'); }
-
-    // Character counter helper
-    function updateCharCounter(element, max, warningAt = 0.8) {
-        if (!element) return;
-        const length = element.value.length;
-        const remaining = max - length;
-        const percent = length / max;
-        let className = 'good';
-        if (percent >= 0.95) className = 'danger';
-        else if (percent >= 0.8) className = 'warning';
-        element.nextElementSibling?.classList?.remove('good', 'warning', 'danger');
-        element.nextElementSibling?.classList?.add(className);
-        if (element.nextElementSibling) {
-            element.nextElementSibling.innerHTML = `${length} / ${max} characters`;
-        }
+    // Load saved theme
+    if (localStorage.getItem('easyembed-theme') === 'light') {
+        document.body.classList.add('light');
+        document.getElementById('themeToggle').textContent = '🌙 Dark Mode';
+        isDark = false;
     }
 
-    // Webhook Info
-    let currentWebhookInfo = null;
-    
+    // TAB SWITCHING
+    const tabs = document.querySelectorAll('.tab-btn');
+    const panels = {
+        builder: document.getElementById('builderPanel'),
+        easyembend: document.getElementById('easyembendPanel')
+    };
+    tabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabId = btn.getAttribute('data-tab');
+            if (!tabId) return;
+            tabs.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            Object.keys(panels).forEach(id => {
+                panels[id].classList.remove('active-panel');
+            });
+            panels[tabId].classList.add('active-panel');
+        });
+    });
+
+    // ---------- MULTI-WEBHOOK SENDER ----------
+    let embeds = [];
+    const webhookUrlsTextarea = document.getElementById('webhookUrls');
+    const webhookCountDiv = document.getElementById('webhookCount');
+    const progressBar = document.getElementById('progressBar');
+    const contentTextarea = document.getElementById('content');
+    const contentCounter = document.getElementById('contentCounter');
+    const contentPreview = document.getElementById('contentPreview');
+    const embedsContainer = document.getElementById('embedsContainer');
+    const previewArea = document.getElementById('previewArea');
+    const webhookInfoDiv = document.getElementById('webhookInfo');
+    const webhookAvatarDiv = document.getElementById('webhookAvatar');
+    const webhookNameSpan = document.getElementById('webhookName');
+    const messageLinkInput = document.getElementById('messageLink');
+    const sendBtn = document.getElementById('sendBtn');
+    const addEmbedBtn = document.getElementById('addEmbedBtn');
+    const statusDiv = document.getElementById('statusMsg');
+
+    function updateWebhookCount() {
+        const urls = webhookUrlsTextarea.value.split('\n').filter(u => u.trim() !== '');
+        const count = urls.length;
+        webhookCountDiv.textContent = `${count} webhook${count !== 1 ? 's' : ''} loaded ${count > 30 ? '⚠️ (max 30)' : ''}`;
+        webhookCountDiv.style.color = count > 30 ? '#ef4444' : '#9ca3af';
+    }
+    webhookUrlsTextarea.addEventListener('input', updateWebhookCount);
+    updateWebhookCount();
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
     async function fetchWebhookInfo(url) {
         if (!url || !url.startsWith('https://discord.com/api/webhooks/')) {
-            currentWebhookInfo = null;
-            updateWebhookInfoDisplay();
-            showStatus("❌ Invalid webhook URL", false);
+            webhookInfoDiv.style.display = 'none';
             return;
         }
-        showStatus("🔄 Fetching webhook info...", false);
         try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
-            let avatarUrl = null;
-            if (data.avatar) {
-                avatarUrl = `https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.png?size=40`;
+            const res = await fetch(url);
+            if (res.ok) {
+                const data = await res.json();
+                const name = data.name || 'Webhook';
+                const avatar = data.avatar ? `https://cdn.discordapp.com/webhooks/${data.id}/${data.avatar}.png` : null;
+                webhookNameSpan.textContent = name;
+                if (avatar) {
+                    webhookAvatarDiv.style.backgroundImage = `url(${avatar})`;
+                    webhookAvatarDiv.style.backgroundSize = 'cover';
+                } else {
+                    webhookAvatarDiv.style.backgroundImage = '';
+                    webhookAvatarDiv.style.backgroundColor = '#2a314b';
+                }
+                webhookInfoDiv.style.display = 'flex';
+            } else {
+                webhookInfoDiv.style.display = 'none';
             }
-            currentWebhookInfo = {
-                name: data.name || "Unnamed Webhook",
-                avatar_url: avatarUrl,
-                id: data.id
-            };
-            updateWebhookInfoDisplay();
-            showStatus(`✅ Loaded: ${currentWebhookInfo.name}`, true);
         } catch (err) {
-            currentWebhookInfo = null;
-            updateWebhookInfoDisplay();
-            showStatus("❌ Failed to load webhook info", false);
+            webhookInfoDiv.style.display = 'none';
         }
     }
-    
-    function updateWebhookInfoDisplay() {
-        const container = document.getElementById('webhookInfoContainer');
+
+    let debounce;
+    webhookUrlsTextarea.addEventListener('input', () => {
+        const firstUrl = webhookUrlsTextarea.value.split('\n').filter(u => u.trim() !== '')[0] || '';
+        clearTimeout(debounce);
+        debounce = setTimeout(() => fetchWebhookInfo(firstUrl), 500);
+    });
+
+    // ---- EMBED BUILDING ----
+    function createFieldGroup(labelText, type, id, value, isTextarea = false) {
+        const div = document.createElement('div');
+        div.className = 'form-group';
+        const label = document.createElement('label');
+        label.textContent = labelText;
+        div.appendChild(label);
+        let input;
+        if (isTextarea) {
+            input = document.createElement('textarea');
+            input.rows = 2;
+        } else {
+            input = document.createElement('input');
+            input.type = type;
+        }
+        input.id = id;
+        input.value = value;
+        div.appendChild(input);
+        return div;
+    }
+
+    function createTimestampDropdown(id, currentVal) {
+        const div = document.createElement('div');
+        div.className = 'form-group';
+        const label = document.createElement('label');
+        label.textContent = 'Timestamp';
+        div.appendChild(label);
+        const select = document.createElement('select');
+        select.id = id;
+        const optNone = document.createElement('option');
+        optNone.value = '';
+        optNone.textContent = 'None';
+        const optNow = document.createElement('option');
+        optNow.value = 'now';
+        optNow.textContent = 'Current time';
+        select.appendChild(optNone);
+        select.appendChild(optNow);
+        if (currentVal === 'now') select.value = 'now';
+        div.appendChild(select);
+        select.addEventListener('change', () => updatePreview());
+        return div;
+    }
+
+    function renderFieldList(embedIdx, fieldsArray) {
+        const container = document.getElementById(`fields-container-${embedIdx}`);
         if (!container) return;
-        if (currentWebhookInfo && currentWebhookInfo.name) {
-            let avatarHtml = `<i class="fab fa-discord" style="font-size: 1.2rem;"></i>`;
-            if (currentWebhookInfo.avatar_url) {
-                avatarHtml = `<img src="${currentWebhookInfo.avatar_url}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png';">`;
-            }
-            container.innerHTML = `
-                <div class="webhook-info">
-                    <div class="webhook-avatar">${avatarHtml}</div>
-                    <div class="webhook-name"><i class="fas fa-paper-plane"></i> ${escapeHtml(currentWebhookInfo.name)}</div>
-                    <button id="reloadWebhookBtn" class="reload-webhook"><i class="fas fa-sync-alt"></i></button>
-                </div>
+        container.innerHTML = '';
+        fieldsArray.forEach((field, fIdx) => {
+            const row = document.createElement('div');
+            row.className = 'field-row';
+            row.innerHTML = `
+                <input type="text" placeholder="Field name" value="${escapeHtml(field.name)}" data-field-idx="${fIdx}" data-type="name">
+                <input type="text" placeholder="Field value" value="${escapeHtml(field.value)}" data-field-idx="${fIdx}" data-type="value">
+                <label style="display:flex; align-items:center; gap:4px; white-space:nowrap; color:#9ca3af; font-size:0.8rem;">
+                    <input type="checkbox" data-field-idx="${fIdx}" data-type="inline" ${field.inline ? 'checked' : ''}> Inline
+                </label>
+                <button class="remove-field" data-field-idx="${fIdx}">✖</button>
             `;
-            document.getElementById('reloadWebhookBtn')?.addEventListener('click', () => {
-                fetchWebhookInfo(document.getElementById('webhookUrl').value.trim());
+            container.appendChild(row);
+        });
+        container.querySelectorAll('input[data-type="name"], input[data-type="value"]').forEach(inp => {
+            inp.addEventListener('input', (e) => {
+                const idxField = parseInt(e.target.dataset.fieldIdx);
+                const type = e.target.dataset.type;
+                if (!isNaN(idxField) && embeds[embedIdx] && embeds[embedIdx].fields[idxField]) {
+                    embeds[embedIdx].fields[idxField][type] = e.target.value;
+                    updatePreview();
+                }
             });
-        } else {
-            container.innerHTML = `<div class="webhook-info" style="opacity:0.6;"><div class="webhook-avatar"><i class="fab fa-discord"></i></div><div class="webhook-name">No webhook loaded — paste URL and click "Load"</div></div>`;
-        }
-    }
-
-    document.getElementById('loadWebhookBtn')?.addEventListener('click', () => {
-        fetchWebhookInfo(document.getElementById('webhookUrl').value.trim());
-    });
-
-    // Emoji picker
-    const emojis = ["😀","😃","😄","😁","😆","😅","😂","🤣","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","😣","😖","😫","😩","🥺","😢","😭","😤","😠","😡","🤬","🤯","😳","🥵","🥶","😱","😨","😰","😥","😓","🤗","🤔","🤭","🤫","🤥","😶","😐","😑","😬","🙄","😯","😦","😧","😮","😲","🥱","😴","🤤","😪","😵","🤐","🥴","🤢","🤮","🤧","😷","🤒","🤕","🤑","🤠","😈","👿","👹","👺","🤡","💩","👻","💀","☠️","👽","🤖","🎃","👍","👎","👌","✌️","🤞","🤟","🤘","👏","🙌","👐","🤲","🤝","🙏","❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❣️","💕","💞","💓","💗","💖","💘","💝","🎉","✨","⭐","🌟","🔥","💧","💦","☀️","🌙","⭐","🌈","⚡","❄️","🔥","💨","💢","💥","💫","💦","💤","⭐","🌟","💯","❗","❓","⁉️","‼️","🔴","🟠","🟡","🟢","🔵","🟣","⚫","⚪","🟤"];
-
-    function createEmojiPicker(containerId, targetInputId) {
-        const picker = document.getElementById(containerId);
-        const input = document.getElementById(targetInputId);
-        if (!picker || !input) return;
-        picker.innerHTML = '';
-        emojis.forEach(emoji => {
-            const span = document.createElement('span');
-            span.textContent = emoji;
-            span.onclick = (e) => {
-                e.stopPropagation();
-                const start = input.selectionStart;
-                const end = input.selectionEnd;
-                const text = input.value;
-                input.value = text.substring(0, start) + emoji + text.substring(end);
-                input.dispatchEvent(new Event('input'));
-                picker.style.display = 'none';
-                input.focus();
-            };
-            picker.appendChild(span);
         });
-    }
-
-    // Global data
-    let embeds = [{
-        title: "Welcome To EasyEmbeds",
-        description: "Build beautiful Discord messages with multiple embeds. Edit fields on the left.",
-        color: 0x5865f2,
-        author: { name: "", icon_url: "", url: "" },
-        footer: { text: "", icon_url: "" },
-        timestamp: null,
-        thumbnail: { url: "" },
-        image: { url: "" },
-        fields: []
-    }];
-    let selectedEmbedIndex = 0;
-    let currentMode = "visual";
-
-    const visualEditorDiv = document.getElementById('visualEditor');
-    const jsonEditorDiv = document.getElementById('jsonEditor');
-    const jsonTextarea = document.getElementById('jsonPayload');
-    const simpleMessageInput = document.getElementById('simpleMessage');
-
-    // Theme toggle
-    let isDarkMode = true;
-    document.getElementById('themeToggleBtn')?.addEventListener('click', () => {
-        isDarkMode = !isDarkMode;
-        if (isDarkMode) {
-            document.body.classList.remove('light-mode');
-            document.getElementById('themeToggleBtn').innerHTML = '<i class="fas fa-moon"></i> Theme';
-        } else {
-            document.body.classList.add('light-mode');
-            document.getElementById('themeToggleBtn').innerHTML = '<i class="fas fa-sun"></i> Theme';
-        }
-    });
-
-    function rebuildEditorUI() {
-        const embed = embeds[selectedEmbedIndex];
-        if (!embed) return;
-        const editorDiv = document.getElementById('currentEditor');
-        if (!editorDiv) return;
-        editorDiv.innerHTML = `
-            <div class="form-group">
-                <div class="label-with-emoji"><label>Title (max 256)</label><button class="emoji-btn" id="emojiBtnTitle"><i class="fas fa-smile"></i></button></div>
-                <input type="text" id="titleInput" value="${escapeHtml(embed.title)}">
-                <div class="char-counter">${embed.title.length} / 256 characters</div>
-                <div id="emojiPickerTitle" class="emoji-picker"></div>
-            </div>
-            <div class="form-group">
-                <div class="label-with-emoji"><label>Description (max 2000) - Bigger box for easier writing</label><button class="emoji-btn" id="emojiBtnDesc"><i class="fas fa-smile"></i></button></div>
-                <textarea id="descInput" class="description-textarea" rows="6">${escapeHtml(embed.description)}</textarea>
-                <div class="char-counter">${embed.description.length} / 2000 characters</div>
-                <div id="emojiPickerDesc" class="emoji-picker"></div>
-            </div>
-            <div class="form-group"><label>Color</label><div class="color-row"><input type="color" id="colorPicker" value="${intToHex(embed.color)}"><span>${intToHex(embed.color)}</span></div></div>
-            <div class="form-group"><label>Author Name</label><input type="text" id="authorName" value="${escapeHtml(embed.author.name)}"></div>
-            <div class="form-group"><label>Author Icon URL</label><input type="text" id="authorIcon" value="${escapeHtml(embed.author.icon_url)}"></div>
-            <div class="form-group"><label>Author URL</label><input type="text" id="authorUrl" value="${escapeHtml(embed.author.url)}"></div>
-            <div class="form-group"><label>Thumbnail URL</label><input type="text" id="thumbUrl" value="${escapeHtml(embed.thumbnail.url)}"></div>
-            <div class="form-group"><label>Main Image URL</label><input type="text" id="imageUrl" value="${escapeHtml(embed.image.url)}"></div>
-            <div class="form-group"><label>Footer Text (max 2048)</label><input type="text" id="footerText" value="${escapeHtml(embed.footer.text)}">
-                <div class="char-counter" id="footerCounter">${embed.footer.text.length} / 2048 characters</div>
-            </div>
-            <div class="form-group"><label>Footer Icon URL</label><input type="text" id="footerIcon" value="${escapeHtml(embed.footer.icon_url)}"></div>
-            <div class="form-group"><label>Timestamp (ISO)</label><input type="text" id="timestampVal" value="${embed.timestamp || ''}"></div>
-            <div class="form-group"><label>Fields</label><div id="fieldsDynamicContainer" class="fields-container"></div><button type="button" id="addFieldBtn" class="add-field-btn">+ Add field</button></div>
-        `;
-
-        createEmojiPicker('emojiPickerTitle', 'titleInput');
-        createEmojiPicker('emojiPickerDesc', 'descInput');
-        document.getElementById('emojiBtnTitle')?.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const picker = document.getElementById('emojiPickerTitle');
-            picker.style.display = picker.style.display === 'flex' ? 'none' : 'flex';
-        });
-        document.getElementById('emojiBtnDesc')?.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const picker = document.getElementById('emojiPickerDesc');
-            picker.style.display = picker.style.display === 'flex' ? 'none' : 'flex';
-        });
-
-        // Title counter
-        const titleInput = document.getElementById('titleInput');
-        const titleCounter = titleInput?.nextElementSibling;
-        titleInput?.addEventListener('input', (e) => {
-            embed.title = e.target.value;
-            if (titleCounter) {
-                const len = e.target.value.length;
-                titleCounter.innerHTML = `${len} / 256 characters`;
-                if (len >= 246) titleCounter.classList.add('danger');
-                else if (len >= 205) titleCounter.classList.add('warning');
-                else titleCounter.classList.remove('warning', 'danger');
-            }
-            updatePreviewAndJson();
-        });
-        if (titleCounter) updateCharCounter(titleInput, 256);
-
-        // Description counter (bigger box)
-        const descInput = document.getElementById('descInput');
-        const descCounter = descInput?.nextElementSibling;
-        descInput?.addEventListener('input', (e) => {
-            embed.description = e.target.value;
-            if (descCounter) {
-                const len = e.target.value.length;
-                descCounter.innerHTML = `${len} / 2000 characters`;
-                if (len >= 1900) descCounter.classList.add('danger');
-                else if (len >= 1600) descCounter.classList.add('warning');
-                else descCounter.classList.remove('warning', 'danger');
-            }
-            updatePreviewAndJson();
-        });
-        if (descCounter) updateCharCounter(descInput, 2000);
-
-        // Footer counter
-        const footerInput = document.getElementById('footerText');
-        const footerCounter = document.getElementById('footerCounter');
-        footerInput?.addEventListener('input', (e) => {
-            embed.footer.text = e.target.value;
-            if (footerCounter) {
-                const len = e.target.value.length;
-                footerCounter.innerHTML = `${len} / 2048 characters`;
-                if (len >= 1946) footerCounter.classList.add('danger');
-                else if (len >= 1638) footerCounter.classList.add('warning');
-                else footerCounter.classList.remove('warning', 'danger');
-            }
-            updatePreviewAndJson();
-        });
-
-        document.getElementById('colorPicker')?.addEventListener('input', (e) => { embed.color = parseInt(e.target.value.slice(1), 16); updatePreviewAndJson(); });
-        document.getElementById('authorName')?.addEventListener('input', (e) => { embed.author.name = e.target.value; updatePreviewAndJson(); });
-        document.getElementById('authorIcon')?.addEventListener('input', (e) => { embed.author.icon_url = e.target.value; updatePreviewAndJson(); });
-        document.getElementById('authorUrl')?.addEventListener('input', (e) => { embed.author.url = e.target.value; updatePreviewAndJson(); });
-        document.getElementById('thumbUrl')?.addEventListener('input', (e) => { embed.thumbnail.url = e.target.value; updatePreviewAndJson(); });
-        document.getElementById('imageUrl')?.addEventListener('input', (e) => { embed.image.url = e.target.value; updatePreviewAndJson(); });
-        document.getElementById('footerIcon')?.addEventListener('input', (e) => { embed.footer.icon_url = e.target.value; updatePreviewAndJson(); });
-        document.getElementById('timestampVal')?.addEventListener('input', (e) => { embed.timestamp = e.target.value || null; updatePreviewAndJson(); });
-
-        const fieldsContainer = document.getElementById('fieldsDynamicContainer');
-        function renderFields() {
-            if (!fieldsContainer) return;
-            fieldsContainer.innerHTML = '';
-            embed.fields.forEach((f, idx) => {
-                const div = document.createElement('div'); div.className = 'field-item';
-                div.innerHTML = `
-                    <div class="field-name-wrapper">
-                        <input placeholder="Name (max 256)" class="f-name" value="${escapeHtml(f.name)}">
-                        <button class="remove-field">✕</button>
-                    </div>
-                    <div class="char-counter f-name-counter">${f.name.length} / 256 characters</div>
-                    <textarea placeholder="Value (max 1024)" class="f-value" rows="3">${escapeHtml(f.value)}</textarea>
-                    <div class="char-counter f-value-counter">${f.value.length} / 1024 characters</div>
-                    <label><input type="checkbox" class="f-inline" ${f.inline ? 'checked' : ''}> Inline</label>
-                `;
-                const nameInput = div.querySelector('.f-name');
-                const valueInput = div.querySelector('.f-value');
-                const nameCounter = div.querySelector('.f-name-counter');
-                const valueCounter = div.querySelector('.f-value-counter');
-                
-                nameInput?.addEventListener('input', (e) => {
-                    embed.fields[idx].name = e.target.value;
-                    if (nameCounter) {
-                        const len = e.target.value.length;
-                        nameCounter.innerHTML = `${len} / 256 characters`;
-                        if (len >= 246) nameCounter.classList.add('danger');
-                        else if (len >= 205) nameCounter.classList.add('warning');
-                        else nameCounter.classList.remove('warning', 'danger');
-                    }
-                    updatePreviewAndJson();
-                });
-                valueInput?.addEventListener('input', (e) => {
-                    embed.fields[idx].value = e.target.value;
-                    if (valueCounter) {
-                        const len = e.target.value.length;
-                        valueCounter.innerHTML = `${len} / 1024 characters`;
-                        if (len >= 973) valueCounter.classList.add('danger');
-                        else if (len >= 819) valueCounter.classList.add('warning');
-                        else valueCounter.classList.remove('warning', 'danger');
-                    }
-                    updatePreviewAndJson();
-                });
-                div.querySelector('.f-inline')?.addEventListener('change', (e) => { embed.fields[idx].inline = e.target.checked; updatePreviewAndJson(); });
-                div.querySelector('.remove-field')?.addEventListener('click', () => { embed.fields.splice(idx,1); renderFields(); updatePreviewAndJson(); });
-                fieldsContainer.appendChild(div);
+        container.querySelectorAll('input[data-type="inline"]').forEach(chk => {
+            chk.addEventListener('change', (e) => {
+                const idxField = parseInt(e.target.dataset.fieldIdx);
+                if (!isNaN(idxField) && embeds[embedIdx] && embeds[embedIdx].fields[idxField]) {
+                    embeds[embedIdx].fields[idxField].inline = e.target.checked;
+                    updatePreview();
+                }
             });
-        }
-        renderFields();
-        document.getElementById('addFieldBtn')?.addEventListener('click', () => { embed.fields.push({ name: "New", value: "", inline: false }); renderFields(); updatePreviewAndJson(); });
+        });
+        container.querySelectorAll('.remove-field').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idxField = parseInt(btn.dataset.fieldIdx);
+                if (!isNaN(idxField) && embeds[embedIdx]) {
+                    embeds[embedIdx].fields.splice(idxField, 1);
+                    renderFieldList(embedIdx, embeds[embedIdx].fields);
+                    updatePreview();
+                }
+            });
+        });
     }
 
-    function updatePreviewAndJson() {
+    function attachEmbedListeners(embedDiv, idx) {
+        const inputs = embedDiv.querySelectorAll('input, textarea, select');
+        inputs.forEach(input => {
+            input.addEventListener('input', () => {
+                const newTitle = document.getElementById(`embed_title_${idx}`)?.value || '';
+                const newDesc = document.getElementById(`embed_desc_${idx}`)?.value || '';
+                const newAuthor = document.getElementById(`embed_author_${idx}`)?.value || '';
+                const newAuthorUrl = document.getElementById(`embed_authorUrl_${idx}`)?.value || '';
+                const newColor = document.getElementById(`embed_color_${idx}`)?.value || '#e63946';
+                const newImage = document.getElementById(`embed_image_${idx}`)?.value || '';
+                const newThumb = document.getElementById(`embed_thumb_${idx}`)?.value || '';
+                const newFooter = document.getElementById(`embed_footer_${idx}`)?.value || '';
+                const newTimestamp = document.getElementById(`embed_timestamp_${idx}`)?.value || '';
+                if (embeds[idx]) {
+                    embeds[idx].title = newTitle;
+                    embeds[idx].description = newDesc;
+                    embeds[idx].authorName = newAuthor;
+                    embeds[idx].authorUrl = newAuthorUrl;
+                    embeds[idx].color = newColor;
+                    embeds[idx].image = newImage;
+                    embeds[idx].thumbnail = newThumb;
+                    embeds[idx].footer = newFooter;
+                    embeds[idx].timestamp = newTimestamp;
+                }
+                const previewDiv = embedDiv.querySelector('.color-preview');
+                if (previewDiv) previewDiv.style.backgroundColor = newColor;
+                updatePreview();
+            });
+        });
+    }
+
+    function renderEmbedCard(embed, idx) {
+        const card = document.createElement('div');
+        card.className = 'embed-card';
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'embed-header';
+        headerDiv.innerHTML = `<strong>Embed ${idx+1}</strong><button class="remove-embed" data-embed-idx="${idx}">Remove</button>`;
+        card.appendChild(headerDiv);
+
+        card.appendChild(createFieldGroup('Author name', 'text', `embed_author_${idx}`, embed.authorName || ''));
+        card.appendChild(createFieldGroup('Author URL', 'text', `embed_authorUrl_${idx}`, embed.authorUrl || ''));
+        card.appendChild(createFieldGroup('Title', 'text', `embed_title_${idx}`, embed.title || ''));
+        card.appendChild(createFieldGroup('Description', 'text', `embed_desc_${idx}`, embed.description || '', true));
+
+        const colorDiv = document.createElement('div');
+        colorDiv.className = 'form-group';
+        const colorLabel = document.createElement('label');
+        colorLabel.textContent = 'Color';
+        colorDiv.appendChild(colorLabel);
+        const colorRow = document.createElement('div');
+        colorRow.className = 'color-row';
+        const colorInput = document.createElement('input');
+        colorInput.type = 'text';
+        colorInput.placeholder = '#rrggbb';
+        colorInput.value = embed.color || '#e63946';
+        colorInput.id = `embed_color_${idx}`;
+        const colorPicker = document.createElement('input');
+        colorPicker.type = 'color';
+        colorPicker.value = embed.color || '#e63946';
+        colorPicker.style.width = '48px';
+        const colorPreview = document.createElement('div');
+        colorPreview.className = 'color-preview';
+        colorPreview.style.backgroundColor = embed.color || '#e63946';
+        colorRow.appendChild(colorInput);
+        colorRow.appendChild(colorPicker);
+        colorRow.appendChild(colorPreview);
+        colorDiv.appendChild(colorRow);
+        card.appendChild(colorDiv);
+
+        colorInput.addEventListener('input', () => {
+            colorPicker.value = colorInput.value;
+            colorPreview.style.backgroundColor = colorInput.value;
+            if (embeds[idx]) embeds[idx].color = colorInput.value;
+            updatePreview();
+        });
+        colorPicker.addEventListener('input', () => {
+            colorInput.value = colorPicker.value;
+            colorPreview.style.backgroundColor = colorPicker.value;
+            if (embeds[idx]) embeds[idx].color = colorPicker.value;
+            updatePreview();
+        });
+
+        const fieldsLabel = document.createElement('div');
+        fieldsLabel.style.fontWeight = '600';
+        fieldsLabel.style.margin = '8px 0 5px';
+        fieldsLabel.style.color = '#9ca3af';
+        fieldsLabel.textContent = 'Fields';
+        card.appendChild(fieldsLabel);
+        const fieldsContainer = document.createElement('div');
+        fieldsContainer.id = `fields-container-${idx}`;
+        card.appendChild(fieldsContainer);
+        const addFieldBtn = document.createElement('button');
+        addFieldBtn.textContent = '+ Add Field';
+        addFieldBtn.style.background = '#1a1f32';
+        addFieldBtn.style.border = '1px solid #2a314b';
+        addFieldBtn.style.padding = '4px 12px';
+        addFieldBtn.style.borderRadius = '40px';
+        addFieldBtn.style.fontSize = '0.7rem';
+        addFieldBtn.style.marginTop = '5px';
+        addFieldBtn.style.color = '#eef2ff';
+        addFieldBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            embed.fields.push({ name: '', value: '', inline: false });
+            renderFieldList(idx, embed.fields);
+            updatePreview();
+        });
+        card.appendChild(addFieldBtn);
+        card.appendChild(createFieldGroup('Image URL', 'text', `embed_image_${idx}`, embed.image || ''));
+        card.appendChild(createFieldGroup('Thumbnail URL', 'text', `embed_thumb_${idx}`, embed.thumbnail || ''));
+        card.appendChild(createFieldGroup('Footer text', 'text', `embed_footer_${idx}`, embed.footer || ''));
+        card.appendChild(createTimestampDropdown(`embed_timestamp_${idx}`, embed.timestamp || ''));
+
+        attachEmbedListeners(card, idx);
+        renderFieldList(idx, embed.fields);
+        return card;
+    }
+
+    function renderAllEmbeds() {
+        embedsContainer.innerHTML = '';
+        for (let i = 0; i < embeds.length; i++) {
+            embedsContainer.appendChild(renderEmbedCard(embeds[i], i));
+        }
+        if (embeds.length === 0) {
+            const emptyMsg = document.createElement('div');
+            emptyMsg.style.textAlign = 'center';
+            emptyMsg.style.padding = '2rem';
+            emptyMsg.style.color = '#9ca3af';
+            emptyMsg.textContent = 'No embeds. Click "Add Embed" to start.';
+            embedsContainer.appendChild(emptyMsg);
+        }
+        document.querySelectorAll('.remove-embed').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(btn.getAttribute('data-embed-idx'));
+                if (!isNaN(idx)) {
+                    embeds.splice(idx, 1);
+                    renderAllEmbeds();
+                    updatePreview();
+                }
+            });
+        });
+    }
+
+    function addEmbed() {
+        embeds.push({
+            title: '', description: '', authorName: '', authorUrl: '', color: '#e63946',
+            image: '', thumbnail: '', footer: '', timestamp: '', fields: []
+        });
+        renderAllEmbeds();
         updatePreview();
-        if (currentMode === "visual") updateJsonEditorFromVisual();
     }
 
     function updatePreview() {
-        const container = document.getElementById('previewContainer');
-        if (!container) return;
-        let html = '';
-        const simpleMsg = simpleMessageInput.value;
-        if (simpleMsg.trim() !== '') html += `<div class="preview-simple-message">${escapeHtml(simpleMsg)}</div>`;
-        for (const emb of embeds) {
-            const colorHex = intToHex(emb.color);
-            html += `<div class="preview-embed" style="border-left: 2px solid ${colorHex};"><div>
-                        ${emb.author?.name ? `<div class="embed-author">${emb.author.icon_url ? `<img src="${emb.author.icon_url}" onerror="this.style.display='none'">` : ''}<span>${escapeHtml(emb.author.name)}</span></div>` : ''}
-                        ${emb.title ? `<div class="embed-title">${escapeHtml(emb.title)}</div>` : ''}
-                        ${emb.description ? `<div class="embed-desc">${escapeHtml(emb.description)}</div>` : ''}
-                        ${emb.fields?.length ? `<div class="embed-fields">${emb.fields.map(f => `<div class="field" style="${f.inline ? 'flex:1' : 'width:100%'}"><div class="field-name">${escapeHtml(f.name)}</div><div class="field-value">${escapeHtml(f.value)}</div></div>`).join('')}</div>` : ''}
-                        ${emb.image?.url ? `<div class="embed-img"><img src="${emb.image.url}" onerror="this.style.display='none'"></div>` : ''}
-                        ${emb.thumbnail?.url ? `<div class="embed-thumb"><img src="${emb.thumbnail.url}" onerror="this.style.display='none'"></div>` : ''}
-                        ${(emb.footer?.text || emb.timestamp) ? `<div class="embed-footer">${emb.footer?.text ? `<span>${escapeHtml(emb.footer.text)}</span>` : ''}${emb.timestamp ? `<span>${new Date(emb.timestamp).toLocaleString()}</span>` : ''}</div>` : ''}
-                    </div></div>`;
-        }
-        if (!html) html = '<div style="color:#b5bac1;text-align:center;">No content to preview</div>';
-        container.innerHTML = html;
-    }
-
-    function getFullPayload() {
-        const content = simpleMessageInput.value.trim();
-        const payload = { embeds: embeds.map(e => {
-            const clean = JSON.parse(JSON.stringify(e));
-            if(clean.color) clean.color = Number(clean.color);
-            if(clean.timestamp === "") delete clean.timestamp;
-            if(clean.author && !clean.author.name) delete clean.author;
-            if(clean.footer && !clean.footer.text) delete clean.footer;
-            if(clean.thumbnail && !clean.thumbnail.url) delete clean.thumbnail;
-            if(clean.image && !clean.image.url) delete clean.image;
-            if(clean.fields && clean.fields.length===0) delete clean.fields;
-            return clean;
-        }) };
-        if(content) payload.content = content;
-        return payload;
-    }
-
-    function updateJsonEditorFromVisual() {
-        const payload = getFullPayload();
-        jsonTextarea.value = JSON.stringify(payload, null, 2);
-        document.getElementById('jsonStatus').innerHTML = '✅ JSON synced.';
-    }
-
-    function applyJsonToVisual() {
-        try {
-            const parsed = JSON.parse(jsonTextarea.value);
-            if (!parsed || typeof parsed !== 'object') throw new Error("Invalid object");
-            let newEmbeds = parsed.embeds;
-            if (!Array.isArray(newEmbeds)) newEmbeds = [];
-            newEmbeds = newEmbeds.map(emb => ({
-                title: emb.title || "",
-                description: emb.description || "",
-                color: typeof emb.color === 'number' ? emb.color : 0x5865f2,
-                author: { name: emb.author?.name || "", icon_url: emb.author?.icon_url || "", url: emb.author?.url || "" },
-                footer: { text: emb.footer?.text || "", icon_url: emb.footer?.icon_url || "" },
-                timestamp: emb.timestamp || null,
-                thumbnail: { url: emb.thumbnail?.url || "" },
-                image: { url: emb.image?.url || "" },
-                fields: Array.isArray(emb.fields) ? emb.fields.map(f => ({ name: f.name || "", value: f.value || "", inline: !!f.inline })) : []
-            }));
-            if (newEmbeds.length === 0) newEmbeds = [{ title: "New Embed", description: "", color: 0x5865f2, author: { name: "", icon_url: "", url: "" }, footer: { text: "", icon_url: "" }, timestamp: null, thumbnail: { url: "" }, image: { url: "" }, fields: [] }];
-            embeds = newEmbeds;
-            selectedEmbedIndex = 0;
-            if (parsed.content !== undefined) simpleMessageInput.value = parsed.content || "";
-            rebuildEditorUI();
-            updatePreview();
-            if (currentMode === "visual") updateJsonEditorFromVisual();
-            document.getElementById('jsonStatus').innerHTML = '✅ Applied JSON.';
-            showStatus("JSON applied", true);
-        } catch (e) {
-            document.getElementById('jsonStatus').innerHTML = `❌ Invalid JSON: ${e.message}`;
-            showStatus("JSON error", false);
-        }
-    }
-
-    function formatJson() {
-        try {
-            const parsed = JSON.parse(jsonTextarea.value);
-            jsonTextarea.value = JSON.stringify(parsed, null, 2);
-            document.getElementById('jsonStatus').innerHTML = '✅ Formatted.';
-        } catch (e) {
-            document.getElementById('jsonStatus').innerHTML = `❌ Cannot format: ${e.message}`;
-        }
-    }
-
-    function setMode(mode) {
-        currentMode = mode;
-        if (mode === "visual") {
-            visualEditorDiv.style.display = "block";
-            jsonEditorDiv.style.display = "none";
-            document.getElementById('visualModeBtn').classList.add('active');
-            document.getElementById('jsonModeBtn').classList.remove('active');
-            updateJsonEditorFromVisual();
+        const contentText = contentTextarea.value;
+        if (contentText.trim()) {
+            contentPreview.textContent = contentText;
+            contentPreview.style.display = 'block';
         } else {
-            visualEditorDiv.style.display = "none";
-            jsonEditorDiv.style.display = "block";
-            document.getElementById('visualModeBtn').classList.remove('active');
-            document.getElementById('jsonModeBtn').classList.add('active');
-            updateJsonEditorFromVisual();
+            contentPreview.style.display = 'none';
+        }
+        previewArea.innerHTML = '';
+        if (embeds.length === 0) {
+            previewArea.innerHTML = '<div style="text-align:center; padding:2rem; color:#9ca3af;">No embeds to preview</div>';
+            return;
+        }
+        for (let e of embeds) {
+            const previewDiv = document.createElement('div');
+            previewDiv.className = 'preview-embed';
+            if (e.authorName) {
+                const authDiv = document.createElement('div');
+                authDiv.style.display = 'flex';
+                authDiv.style.alignItems = 'center';
+                authDiv.style.gap = '6px';
+                let authHtml = `<strong>${escapeHtml(e.authorName)}</strong>`;
+                if (e.authorUrl) authHtml = `<a href="${escapeHtml(e.authorUrl)}" target="_blank" style="color:#60a5fa;">${authHtml}</a>`;
+                authDiv.innerHTML = authHtml;
+                previewDiv.appendChild(authDiv);
+            }
+            if (e.title) {
+                const titleDiv = document.createElement('div');
+                titleDiv.style.fontWeight = 'bold';
+                titleDiv.style.fontSize = '1rem';
+                titleDiv.textContent = e.title;
+                previewDiv.appendChild(titleDiv);
+            }
+            if (e.description) {
+                const descDiv = document.createElement('div');
+                descDiv.style.marginTop = '4px';
+                descDiv.textContent = e.description;
+                previewDiv.appendChild(descDiv);
+            }
+            if (e.thumbnail) {
+                const thumbDiv = document.createElement('div');
+                thumbDiv.style.float = 'right';
+                thumbDiv.style.maxWidth = '80px';
+                thumbDiv.style.marginLeft = '10px';
+                thumbDiv.innerHTML = `<img src="${escapeHtml(e.thumbnail)}" style="max-width:100%; border-radius:8px;" onerror="this.style.display='none'">`;
+                previewDiv.appendChild(thumbDiv);
+            }
+            if (e.fields && e.fields.length) {
+                const fieldsDiv = document.createElement('div');
+                fieldsDiv.style.marginTop = '8px';
+                e.fields.forEach(f => {
+                    const fDiv = document.createElement('div');
+                    fDiv.style.borderTop = '1px solid #252b3d';
+                    fDiv.style.paddingTop = '6px';
+                    fDiv.style.marginTop = '6px';
+                    fDiv.innerHTML = `<strong>${escapeHtml(f.name)}</strong><br>${escapeHtml(f.value)}`;
+                    if (f.inline) fDiv.style.display = 'inline-block';
+                    else fDiv.style.display = 'block';
+                    fieldsDiv.appendChild(fDiv);
+                });
+                previewDiv.appendChild(fieldsDiv);
+            }
+            if (e.image) {
+                const imgDiv = document.createElement('div');
+                imgDiv.style.marginTop = '8px';
+                imgDiv.innerHTML = `<img src="${escapeHtml(e.image)}" style="max-width:100%; border-radius:12px;" onerror="this.style.display='none'">`;
+                previewDiv.appendChild(imgDiv);
+            }
+            if (e.footer) {
+                const footDiv = document.createElement('div');
+                footDiv.style.fontSize = '0.7rem';
+                footDiv.style.marginTop = '6px';
+                footDiv.style.color = '#9ca3af';
+                footDiv.textContent = e.footer;
+                previewDiv.appendChild(footDiv);
+            }
+            if (e.timestamp === 'now') {
+                const tsDiv = document.createElement('div');
+                tsDiv.style.fontSize = '0.7rem';
+                tsDiv.style.marginTop = '4px';
+                tsDiv.style.color = '#9ca3af';
+                tsDiv.textContent = new Date().toLocaleString();
+                previewDiv.appendChild(tsDiv);
+            }
+            previewArea.appendChild(previewDiv);
         }
     }
 
-    function refreshEmbedListUI() {
-        const container = document.getElementById('embedList');
-        if(!container) return;
-        container.innerHTML = '';
-        embeds.forEach((_, idx) => {
-            const tab = document.createElement('div');
-            tab.className = `embed-tab ${idx === selectedEmbedIndex ? 'active' : ''}`;
-            tab.innerHTML = `Embed ${idx+1} 
-                <button class="duplicate-embed" data-idx="${idx}" title="Duplicate"><i class="fas fa-copy"></i></button>
-                <button class="delete-embed" data-idx="${idx}" ${embeds.length === 1 ? 'disabled style="opacity:0.3;"' : ''}><i class="fas fa-trash"></i></button>`;
-            tab.addEventListener('click', (e) => { if(e.target.closest('.delete-embed') || e.target.closest('.duplicate-embed')) return; selectedEmbedIndex = idx; rebuildEditorUI(); refreshEmbedListUI(); updatePreviewAndJson(); });
-            const dupBtn = tab.querySelector('.duplicate-embed');
-            if(dupBtn) dupBtn.addEventListener('click', (e) => { e.stopPropagation(); duplicateEmbed(idx); });
-            const delBtn = tab.querySelector('.delete-embed');
-            if(delBtn && embeds.length > 1) delBtn.addEventListener('click', (e) => { e.stopPropagation(); embeds.splice(idx,1); if(selectedEmbedIndex >= embeds.length) selectedEmbedIndex = embeds.length-1; if(selectedEmbedIndex<0) selectedEmbedIndex=0; rebuildEditorUI(); refreshEmbedListUI(); updatePreviewAndJson(); });
-            container.appendChild(tab);
-        });
-    }
-
-    function duplicateEmbed(idx) {
-        const original = embeds[idx];
-        const copy = JSON.parse(JSON.stringify(original));
-        copy.title = copy.title + " (Copy)";
-        embeds.splice(idx + 1, 0, copy);
-        selectedEmbedIndex = idx + 1;
-        rebuildEditorUI();
-        refreshEmbedListUI();
-        updatePreviewAndJson();
-        showStatus(`✅ Duplicated embed ${idx+1}`, true);
-    }
-
-    function addNewEmbed() {
-        embeds.push({ title: "New Embed", description: "", color: 0x57f287, author: { name:"", icon_url:"", url:"" }, footer: { text:"", icon_url:"" }, timestamp: null, thumbnail: { url:"" }, image: { url:"" }, fields: [] });
-        selectedEmbedIndex = embeds.length-1;
-        rebuildEditorUI();
-        refreshEmbedListUI();
-        updatePreviewAndJson();
-    }
-
-    async function sendToDiscord() {
-        const url = document.getElementById('webhookUrl').value.trim();
-        if(!url || !url.startsWith('https://discord.com/api/webhooks/')) { showStatus("❌ Valid webhook URL required", false); return; }
-        const payload = getFullPayload();
-        try {
-            const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            const text = await res.text();
-            if(res.ok) showStatus(`✅ Sent! ${embeds.length} embed(s)${payload.content ? ' + message' : ''}`, true);
-            else showStatus(`❌ Error ${res.status}: ${text}`, false);
-        } catch(e) { showStatus(`❌ Network error: ${e.message}`, false); }
-    }
-
-    function showStatus(msg, ok) { const div = document.getElementById('statusMsg'); div.innerHTML = `<i class="fas ${ok ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i> ${msg}`; div.style.background = ok ? '#1a3b2e' : '#3b2a2a'; setTimeout(() => div.style.background = '#111214', 2000); }
-
-    createEmojiPicker('emojiPickerMsg', 'simpleMessage');
-    document.getElementById('emojiBtnMsg')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const picker = document.getElementById('emojiPickerMsg');
-        picker.style.display = picker.style.display === 'flex' ? 'none' : 'flex';
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.emoji-picker') && !e.target.closest('.emoji-btn')) {
-            document.querySelectorAll('.emoji-picker').forEach(p => p.style.display = 'none');
+    // ---------- SEND TO MULTIPLE WEBHOOKS ----------
+    async function sendToAllWebhooks() {
+        const urls = webhookUrlsTextarea.value.split('\n').filter(u => u.trim() !== '');
+        if (urls.length === 0) {
+            showStatus('❌ Please add at least one webhook URL.', 'error');
+            return;
         }
+        if (urls.length > 30) {
+            showStatus('❌ Maximum 30 webhooks allowed.', 'error');
+            return;
+        }
+        for (let u of urls) {
+            if (!u.trim().startsWith('https://discord.com/api/webhooks/')) {
+                showStatus(`❌ Invalid URL: ${u}`, 'error');
+                return;
+            }
+        }
+
+        const messageLink = messageLinkInput.value.trim();
+        const content = contentTextarea.value;
+        const embedsPayload = [];
+        for (let emb of embeds) {
+            const obj = {
+                title: emb.title || undefined,
+                description: emb.description || undefined,
+                color: parseInt(emb.color.replace('#', ''), 16) || 0xe63946,
+                fields: emb.fields.map(f => ({ name: f.name, value: f.value, inline: f.inline }))
+            };
+            if (emb.authorName) {
+                obj.author = { name: emb.authorName };
+                if (emb.authorUrl) obj.author.url = emb.authorUrl;
+            }
+            if (emb.image) obj.image = { url: emb.image };
+            if (emb.thumbnail) obj.thumbnail = { url: emb.thumbnail };
+            if (emb.footer) obj.footer = { text: emb.footer };
+            if (emb.timestamp === 'now') obj.timestamp = new Date().toISOString();
+            if (obj.fields.length === 0) delete obj.fields;
+            if (!obj.title) delete obj.title;
+            if (!obj.description) delete obj.description;
+            embedsPayload.push(obj);
+        }
+
+        let method = 'POST';
+        let payload = { embeds: embedsPayload };
+        if (content) payload.content = content;
+
+        let messageId = null;
+        if (messageLink) {
+            const match = messageLink.match(/\/channels\/(\d+)\/(\d+)\/(\d+)$/);
+            if (match) {
+                messageId = match[3];
+                method = 'PATCH';
+            } else {
+                showStatus('❌ Invalid message link format', 'error');
+                return;
+            }
+        }
+
+        progressBar.style.display = 'block';
+        progressBar.textContent = `⏳ Sending to 0/${urls.length}...`;
+        sendBtn.disabled = true;
+        sendBtn.textContent = '⏳ Sending...';
+
+        let successCount = 0;
+        let failCount = 0;
+        const errors = [];
+
+        for (let i = 0; i < urls.length; i++) {
+            const url = urls[i].trim();
+            let targetUrl = url;
+            if (messageId) {
+                targetUrl = `${url}/messages/${messageId}`;
+            }
+
+            try {
+                const response = await fetch(targetUrl, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (response.ok) {
+                    successCount++;
+                } else {
+                    const err = await response.text();
+                    failCount++;
+                    errors.push(`Webhook ${i+1}: ${response.status} ${err.slice(0, 50)}`);
+                }
+            } catch (err) {
+                failCount++;
+                errors.push(`Webhook ${i+1}: ${err.message}`);
+            }
+
+            progressBar.textContent = `⏳ Sending to ${i+1}/${urls.length}... (${successCount} OK, ${failCount} failed)`;
+        }
+
+        progressBar.textContent = `✅ Done! ${successCount} successful, ${failCount} failed.`;
+        sendBtn.disabled = false;
+        sendBtn.textContent = '👊 FIST SEND · All Webhooks';
+
+        if (failCount === 0) {
+            showStatus(`✅ Sent to all ${successCount} webhooks!`, 'success');
+        } else {
+            const errorSummary = errors.slice(0, 3).join(' | ');
+            showStatus(`⚠️ ${successCount} OK, ${failCount} failed. ${errorSummary}`, 'error');
+        }
+
+        setTimeout(() => {
+            progressBar.style.display = 'none';
+        }, 6000);
+    }
+
+    function showStatus(msg, type) {
+        statusDiv.textContent = msg;
+        statusDiv.className = `status ${type}`;
+        statusDiv.style.display = 'block';
+        setTimeout(() => { statusDiv.style.display = 'none'; }, 8000);
+    }
+
+    contentTextarea.addEventListener('input', () => {
+        const len = contentTextarea.value.length;
+        contentCounter.textContent = `${len}/2000`;
+        updatePreview();
     });
 
-    document.getElementById('sendBtn')?.addEventListener('click', sendToDiscord);
-    document.getElementById('addEmbedBtn')?.addEventListener('click', addNewEmbed);
-    simpleMessageInput?.addEventListener('input', () => { updatePreviewAndJson(); });
-    document.getElementById('visualModeBtn')?.addEventListener('click', () => setMode("visual"));
-    document.getElementById('jsonModeBtn')?.addEventListener('click', () => setMode("json"));
-    document.getElementById('applyJsonBtn')?.addEventListener('click', applyJsonToVisual);
-    document.getElementById('formatJsonBtn')?.addEventListener('click', formatJson);
+    addEmbed();
+    addEmbedBtn.addEventListener('click', addEmbed);
+    sendBtn.addEventListener('click', sendToAllWebhooks);
+    updatePreview();
+    updateWebhookCount();
 
-    rebuildEditorUI();
-    refreshEmbedListUI();
-    updatePreviewAndJson();
-    setMode("visual");
-    updateWebhookInfoDisplay();
+    setTimeout(() => {
+        const firstUrl = webhookUrlsTextarea.value.split('\n').filter(u => u.trim() !== '')[0] || '';
+        if (firstUrl) fetchWebhookInfo(firstUrl);
+    }, 300);
 </script>
 </body>
 </html>
